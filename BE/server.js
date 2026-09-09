@@ -5,6 +5,7 @@ dotenv.config();
 import connectDB from './config/db';
 import app from './app';
 
+//port number is static
 const PORT = process.env.PORT || 5000;
 
 // Connect to Database
