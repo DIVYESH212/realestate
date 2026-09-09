@@ -1,0 +1,432 @@
+<div class="flex h-screen bg-gray-50/50 text-gray-800 font-sans overflow-hidden">
+  <!-- SIDEBAR NAVIGATION -->
+  <app-sidebar class="shrink-0"></app-sidebar>
+
+  <!-- MAIN SCROLLABLE VIEW -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden bg-white">
+    <!-- TOP STICKY HEADER -->
+    <header class="h-16 border-b border-gray-200/80 px-6 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur-md z-20">
+      <div class="flex items-center gap-3 min-w-0">
+        <a routerLink="/buyers"
+          class="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 border border-gray-200/80 px-3.5 py-1.5 rounded-lg transition-all shadow-2xs">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Buyers Directory</span>
+        </a>
+        <span class="text-gray-300">/</span>
+        <span class="text-xs font-bold text-gray-900 truncate">
+          {{ buyer()?.name || 'Buyer Profile' }}
+        </span>
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div *ngIf="buyer()" class="flex items-center gap-2">
+        <button (click)="openEditModal()"
+          class="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200/80 px-3.5 py-1.5 rounded-lg transition-all shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          <span>Edit Buyer</span>
+        </button>
+
+        <button (click)="openDeleteModal()"
+          class="flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-lg transition-all shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="flex-1 overflow-y-auto px-6 py-6 w-full max-w-7xl mx-auto">
+      <!-- TOAST NOTIFICATION -->
+      <div *ngIf="toastMessage()" class="fixed top-20 right-6 z-50 bg-teal-900 text-white rounded-lg shadow-xl px-5 py-3.5 flex items-center gap-3 border border-teal-700 animate-slide-in">
+        <svg class="w-4 h-4 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-xs font-bold">{{ toastMessage() }}</span>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div *ngIf="loading()" class="p-16 flex flex-col items-center justify-center text-center gap-4">
+        <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-gray-500">Loading Buyer Profile...</p>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div *ngIf="!loading() && errorMessage()" class="bg-rose-50 border border-rose-200 rounded-2xl p-8 text-center max-w-lg mx-auto my-12">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-rose-800">Buyer Load Error</h3>
+        <p class="text-xs text-rose-600 mt-1 mb-4">{{ errorMessage() }}</p>
+        <a routerLink="/buyers" class="inline-flex items-center text-xs font-semibold bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700 transition-colors">
+          Return to Buyers Directory
+        </a>
+      </div>
+
+      <!-- BUYER PROFILE DETAILS -->
+      <div *ngIf="!loading() && buyer() as b" class="flex flex-col gap-6 animate-fade-in">
+        <!-- HERO BANNER CARD -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-500/10 to-emerald-500/5 rounded-full blur-3xl -z-0"></div>
+
+          <div class="flex items-center gap-5 z-10">
+            <!-- Avatar -->
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-purple-700/20 border-2 border-white shrink-0">
+              {{ getInitials(b.name) }}
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">
+                  {{ b.name || 'Unnamed Buyer' }}
+                </h1>
+
+                <!-- Status Dropdown Selector -->
+                <div class="relative inline-block">
+                  <select #statusSelect [value]="b.status || 'active'" (change)="updateStatus(statusSelect.value)"
+                    class="appearance-none pl-3.5 pr-8 py-1 text-xs font-bold rounded-full border cursor-pointer outline-none transition-all duration-200 tracking-wide shadow-2xs uppercase"
+                    [ngClass]="getStatusBadgeClass(b.status)" title="Update Status">
+                    <option *ngFor="let s of statusOptions" [value]="s" [selected]="s === b.status" class="bg-white text-gray-800 font-medium py-1 capitalize">
+                      {{ s }}
+                    </option>
+                  </select>
+                  <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-70">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Meta Pills -->
+              <div class="flex items-center gap-2 flex-wrap text-xs text-gray-500">
+                <span class="bg-gray-100 text-gray-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-gray-200">
+                  {{ b.mobilenumber || 'No Phone' }}
+                </span>
+                <span class="bg-gray-100 text-gray-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-gray-200">
+                  {{ b.email || 'No Email' }}
+                </span>
+                <span *ngIf="b.propertyAddress" class="bg-teal-50 text-teal-800 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-teal-200">
+                  📍 {{ b.propertyAddress }}
+                </span>
+                <span *ngIf="b.createdAt" class="text-[10px] text-gray-400 font-mono ml-1">
+                  Joined: {{ b.createdAt | date:'mediumDate' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Contact Actions -->
+          <div class="flex items-center gap-2.5 z-10 w-full md:w-auto">
+            <a *ngIf="b.mobilenumber" [href]="'tel:' + b.mobilenumber"
+              class="flex-1 md:flex-initial flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span>Call Buyer</span>
+            </a>
+
+            <a *ngIf="b.email" [href]="'mailto:' + b.email"
+              class="flex-1 md:flex-initial flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>Email Buyer</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- TAB PILL NAVIGATION BAR -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-2 flex items-center gap-2 overflow-x-auto">
+          <button type="button" (click)="setActiveTab('overview')"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'overview' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span>Overview</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('lead')"
+            class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'lead' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            <span>Linked Deals ({{ associatedLeads().length }})</span>
+            <span *ngIf="associatedLeads().length > 0" class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT CONTAINER -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-8 min-h-[440px]">
+          <!-- OVERVIEW TAB -->
+          <div *ngIf="activeTab() === 'overview'" class="flex flex-col gap-6">
+            <!-- METRIC CARDS -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div class="p-4 bg-gray-50/70 rounded-xl border border-gray-100">
+                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Buyer Status</span>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="text-sm font-bold uppercase" [ngClass]="{
+                    'text-emerald-700': b.status === 'active',
+                    'text-indigo-700': b.status === 'assign',
+                    'text-amber-700': b.status === 'hold',
+                    'text-rose-700': b.status === 'inactive'
+                  }">
+                    {{ b.status || 'active' }}
+                  </span>
+                  <span class="w-2.5 h-2.5 rounded-full" [ngClass]="{
+                    'bg-emerald-500': b.status === 'active',
+                    'bg-indigo-500': b.status === 'assign',
+                    'bg-amber-500': b.status === 'hold',
+                    'bg-rose-500': b.status === 'inactive'
+                  }"></span>
+                </div>
+              </div>
+
+              <div class="p-4 bg-gray-50/70 rounded-xl border border-gray-100">
+                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Deal Association</span>
+                <div class="mt-2 flex items-center justify-between">
+                  <span class="text-sm font-bold text-gray-900">
+                    {{ associatedLeads().length > 0 ? (associatedLeads().length + ' Deals Linked') : 'Unassigned (Available)' }}
+                  </span>
+                  <span class="w-2.5 h-2.5 rounded-full" [ngClass]="associatedLeads().length > 0 ? 'bg-emerald-500' : 'bg-gray-300'"></span>
+                </div>
+              </div>
+
+              <div class="p-4 bg-gray-50/70 rounded-xl border border-gray-100">
+                <span class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Profile ID</span>
+                <div class="mt-2">
+                  <span class="text-xs font-mono text-gray-600 truncate block">{{ b._id || b.id }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- INFO SECTION GRID -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Contact Information Card -->
+              <div class="bg-gray-50/50 rounded-xl border border-gray-200/70 p-5 space-y-4">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                  <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                  Contact Information
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                  <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="text-gray-500 font-medium">Full Name</span>
+                    <span class="font-bold text-gray-900">{{ b.name || '—' }}</span>
+                  </div>
+
+                  <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="text-gray-500 font-medium">Mobile Phone</span>
+                    <a *ngIf="b.mobilenumber" [href]="'tel:' + b.mobilenumber" class="font-bold text-teal-700 hover:underline">{{ b.mobilenumber }}</a>
+                    <span *ngIf="!b.mobilenumber" class="text-gray-400 italic">Not provided</span>
+                  </div>
+
+                  <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="text-gray-500 font-medium">Email Address</span>
+                    <a *ngIf="b.email" [href]="'mailto:' + b.email" class="font-bold text-teal-700 hover:underline">{{ b.email }}</a>
+                    <span *ngIf="!b.email" class="text-gray-400 italic">Not provided</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Property / Buying Area Card -->
+              <div class="bg-gray-50/50 rounded-xl border border-gray-200/70 p-5 space-y-4">
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                  <svg class="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Property & Target Territory
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                  <div class="flex flex-col gap-1 p-3 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="text-gray-500 font-medium">Target Property Address / Territory</span>
+                    <span class="font-bold text-gray-900 text-sm">{{ b.propertyAddress || 'No target address specified' }}</span>
+                  </div>
+
+                  <div class="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-100 shadow-2xs">
+                    <span class="text-gray-500 font-medium">Linked Deals</span>
+                    <span class="font-semibold text-gray-700">{{ associatedLeads().length }} Lead(s)</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LINKED LEADS TAB -->
+          <div *ngIf="activeTab() === 'lead'" class="flex flex-col gap-5">
+            <!-- ACTION HEADER -->
+            <div class="flex items-center justify-between border-b border-gray-100 pb-3 flex-wrap gap-3">
+              <div>
+                <h3 class="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                  Linked Leads ({{ associatedLeads().length }})
+                </h3>
+                <p class="text-[11px] text-gray-400">All properties and deals associated with this buyer.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="navigateToLeads()"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-xl shadow-xs transition-all cursor-pointer">
+                  <span>+ Link Another Lead</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- LEADS LIST -->
+            <div *ngIf="associatedLeads().length > 0" class="flex flex-col gap-4">
+              <div *ngFor="let lead of associatedLeads()" class="bg-gradient-to-r from-slate-900 via-slate-800 to-teal-950 text-white rounded-2xl p-5 border border-teal-500/30 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-center gap-4 min-w-0">
+                  <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white font-extrabold text-lg flex items-center justify-center shadow-md shrink-0">
+                    🏠
+                  </div>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
+                        Active Deal
+                      </span>
+                      <span class="text-xs font-bold capitalize text-teal-200">{{ lead.leadstatus || lead.status || 'Active' }}</span>
+                      <span *ngIf="lead.propertytype" class="text-[10px] text-gray-400">• {{ lead.propertytype }}</span>
+                    </div>
+                    <h4 class="text-base font-bold text-white mt-1 truncate">{{ lead.name || 'Lead Property Deal' }}</h4>
+                    <p class="text-xs text-gray-300 mt-0.5 truncate">
+                      📍 {{ lead.propertyAddress || lead.ownermailingaddress || 'No address specified' }}
+                    </p>
+                    <p *ngIf="lead.ownername || lead.mobilenumber || lead.phone" class="text-[11px] text-gray-400 mt-0.5">
+                      Owner: {{ lead.ownername || '—' }} • Phone: {{ lead.mobilenumber || lead.phone || '—' }}
+                    </p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+                  <div *ngIf="lead.estimatedvalue" class="text-right hidden sm:block mr-2">
+                    <span class="text-[10px] uppercase text-gray-400 block font-bold">Est. Value</span>
+                    <span class="text-xs font-bold text-emerald-400">${{ lead.estimatedvalue | number }}</span>
+                  </div>
+                  <a [routerLink]="['/lead-profile', lead._id || lead.id]"
+                    class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-teal-600 hover:bg-teal-500 text-white rounded-xl shadow-xs transition-all">
+                    <span>View Lead →</span>
+                  </a>
+                  <button type="button" (click)="unassignSingleLead(lead._id || lead.id)"
+                    class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-600/40 border border-rose-500/30 rounded-xl transition-all cursor-pointer"
+                    title="Unlink this lead from this buyer">
+                    <span>Unlink</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <!-- EMPTY LEAD STATE -->
+            <div *ngIf="associatedLeads().length === 0" class="py-12 text-center flex flex-col items-center gap-3 bg-gray-50/60 rounded-2xl border border-dashed border-gray-200">
+              <div class="w-12 h-12 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center text-xl">
+                🏡
+              </div>
+              <h4 class="text-sm font-bold text-gray-800">No Leads Currently Assigned</h4>
+              <p class="text-xs text-gray-400 max-w-md">
+                This buyer is currently independent. You can link this buyer to active leads.
+              </p>
+              <button (click)="navigateToLeads()"
+                class="mt-2 inline-flex items-center gap-1.5 px-4 py-2 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-all cursor-pointer">
+                <span>+ Link to Lead Deal</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- MODAL: EDIT BUYER -->
+<div *ngIf="showEditModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+  <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4 animate-scale-up">
+    <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+      <h3 class="text-base font-bold text-gray-900">Edit Buyer Profile</h3>
+      <button (click)="closeEditModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+    </div>
+
+    <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="space-y-4 text-xs">
+      <div>
+        <label class="block text-gray-600 font-bold mb-1">Full Name *</label>
+        <input type="text" formControlName="name"
+          class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+      </div>
+
+      <div>
+        <label class="block text-gray-600 font-bold mb-1">Phone Number *</label>
+        <input type="text" formControlName="mobilenumber"
+          class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+      </div>
+
+      <div>
+        <label class="block text-gray-600 font-bold mb-1">Email Address *</label>
+        <input type="email" formControlName="email"
+          class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+      </div>
+
+      <div>
+        <label class="block text-gray-600 font-bold mb-1">Target Property / Area</label>
+        <input type="text" formControlName="propertyAddress"
+          class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+      </div>
+
+      <div>
+        <label class="block text-gray-600 font-bold mb-1">Status</label>
+        <select formControlName="status"
+          class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="hold">Hold</option>
+          <option value="assign">Assign</option>
+        </select>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <button type="button" (click)="closeEditModal()"
+          class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer">Cancel</button>
+        <button type="submit" [disabled]="editForm.invalid || isSubmittingEdit()"
+          class="px-5 py-2 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer">
+          {{ isSubmittingEdit() ? 'Saving...' : 'Save Changes' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: DELETE CONFIRMATION -->
+<div *ngIf="showDeleteModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+  <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 text-center space-y-4 animate-scale-up">
+    <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+      </svg>
+    </div>
+    <div>
+      <h3 class="text-base font-bold text-gray-900">Delete Buyer Profile?</h3>
+      <p class="text-xs text-gray-500 mt-1">This buyer will be permanently removed from your directory.</p>
+    </div>
+    <div class="flex items-center justify-center gap-3 pt-2">
+      <button type="button" (click)="closeDeleteModal()"
+        class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer text-xs">Cancel</button>
+      <button type="button" (click)="confirmDelete()" [disabled]="isDeleting()"
+        class="px-5 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-xs">
+        {{ isDeleting() ? 'Deleting...' : 'Delete Buyer' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,682 @@
+<div class="flex h-screen w-screen overflow-hidden bg-gray-50 text-gray-800 font-sans antialiased">
+  <app-sidebar></app-sidebar>
+
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
+    <!-- HEADER BAR -->
+    <header class="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 z-10 shrink-0">
+      <div class="flex items-center gap-3">
+        <a routerLink="/dashboard"
+          class="flex items-center gap-1.5 text-xs font-semibold text-gray-500 hover:text-teal-600 transition-colors bg-gray-100 hover:bg-teal-50 px-3 py-1.5 rounded-lg border border-gray-200 hover:border-teal-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Back to Dashboard</span>
+        </a>
+        <span class="text-gray-300">/</span>
+        <span class="text-xs font-bold text-gray-800 tracking-wide uppercase">Lead Profile</span>
+
+        <!-- PREV / NEXT NAVIGATION -->
+        <div *ngIf="navTotal() > 0" class="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
+          <span *ngIf="navContextTitle()" class="text-[11px] font-semibold text-teal-700 bg-teal-50 border border-teal-200/70 px-2.5 py-0.5 rounded-full hidden sm:inline-block">
+            {{ navContextTitle() }}
+          </span>
+          <span class="text-xs font-semibold text-gray-600 min-w-[50px] text-center">
+            {{ navIndex() }} of {{ navTotal() }}
+          </span>
+          <button type="button" (click)="goToPrevLead()" [disabled]="!prevLeadId()" title="Previous Lead"
+            class="p-1.5 rounded-lg border text-gray-600 hover:text-teal-600 hover:bg-teal-50 border-gray-200 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center cursor-pointer shadow-2xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button type="button" (click)="goToNextLead()" [disabled]="!nextLeadId()" title="Next Lead"
+            class="p-1.5 rounded-lg border text-gray-600 hover:text-teal-600 hover:bg-teal-50 border-gray-200 disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center justify-center cursor-pointer shadow-2xs">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="leadData()" class="flex items-center gap-3">
+        <button (click)="isEditing.set(true)"
+          class="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3.5 py-1.5 rounded-lg transition-all shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          <span>Edit Profile</span>
+        </button>
+        <button (click)="showDeleteConfirm.set(true)"
+          class="flex items-center gap-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3.5 py-1.5 rounded-lg transition-all shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          <span>Delete</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN BODY AREA -->
+    <main class="flex-1 overflow-y-auto px-6 py-6 w-full mx-auto">
+      <!-- TOAST NOTIFICATION -->
+      <div *ngIf="showSuccessToast()" class="fixed top-20 right-6 z-50 bg-teal-900 text-white rounded-lg shadow-xl px-5 py-4 flex items-center gap-3 border border-teal-700 animate-slide-in">
+        <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span class="text-xs font-bold">{{ successToastMessage() }}</span>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div *ngIf="loading()" class="p-16 flex flex-col items-center justify-center text-center gap-4">
+        <div class="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="text-xs font-bold text-gray-500">Loading Lead Profile...</p>
+      </div>
+
+      <!-- ERROR STATE -->
+      <div *ngIf="!loading() && errorMessage()" class="bg-rose-50 border border-rose-200 rounded-xl p-8 text-center max-w-lg mx-auto my-12">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-rose-800">Lead Load Error</h3>
+        <p class="text-xs text-rose-600 mt-1 mb-4">{{ errorMessage() }}</p>
+        <a routerLink="/dashboard" class="inline-flex items-center text-xs font-semibold bg-rose-600 text-white px-4 py-2 rounded-lg hover:bg-rose-700 transition-colors">
+          Return to Dashboard
+        </a>
+      </div>
+
+      <!-- LEAD PROFILE DETAILS VIEW -->
+      <div *ngIf="!loading() && leadData()" class="flex flex-col gap-6 animate-fade-in">
+        <!-- HERO BANNER CARD -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-teal-500/10 to-emerald-500/5 rounded-full blur-3xl -z-0"></div>
+
+          <div class="flex items-center gap-5 z-10">
+            <!-- Lead Initials Avatar -->
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-[#007b85] to-emerald-400 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-teal-700/20 border-2 border-white shrink-0">
+              {{ getInitials(leadData().name) }}
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h1 class="text-2xl font-bold text-gray-900 tracking-tight">
+                  {{ leadData().name || 'Unnamed Lead' }}
+                </h1>
+
+                <!-- Status Dropdown Selector -->
+                <div class="relative inline-block">
+                  <select #statusSelect [value]="getCurrentStatus()" (change)="onUpdateStatus(statusSelect.value)"
+                    class="appearance-none pl-3.5 pr-8 py-1 text-xs font-bold rounded-full border cursor-pointer outline-none transition-all duration-200 tracking-wide shadow-2xs focus:ring-2 focus:ring-teal-500/20"
+                    [ngClass]="getStatusClasses(getCurrentStatus())" title="Change Lead Status">
+                    <option *ngFor="let status of statusOptions()" [value]="status" [selected]="status.toLowerCase() === getCurrentStatus().toLowerCase()" class="bg-white text-gray-800 font-medium py-1">
+                      {{ status }}
+                    </option>
+                  </select>
+                  <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 opacity-70">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Secondary Details -->
+              <p class="text-xs text-gray-500 font-medium flex items-center gap-2 mt-0.5">
+                <span>Owner: <strong class="text-gray-700">{{ leadData().ownername || 'N/A' }}</strong></span>
+                <span>•</span>
+                <span class="truncate max-w-md">Address: <strong class="text-gray-700">{{ leadData().propertyAddress || leadData().ownermailingaddress || 'No Address' }}</strong></span>
+              </p>
+
+              <!-- Tags -->
+              <div class="flex items-center gap-2 mt-2">
+                <span class="bg-teal-50 text-teal-700 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-teal-100 capitalize">
+                  Segment: {{ leadData().market_segment || 'Residential' }}
+                </span>
+                <span class="bg-gray-100 text-gray-600 text-[11px] font-semibold px-2.5 py-0.5 rounded-md border border-gray-200 capitalize">
+                  Source: {{ leadData().leadsource || 'Website' }}
+                </span>
+                <span class="text-[11px] text-gray-400 font-mono ml-1">
+                  Created: {{ leadData().dateCreated || leadData().createdAt || 'N/A' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Contact Actions -->
+          <div class="flex items-center gap-2 z-10 w-full md:w-auto">
+            <a *ngIf="leadData().mobilenumber" [href]="'tel:' + leadData().mobilenumber"
+              class="flex-1 md:flex-initial flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              <span>Call Lead</span>
+            </a>
+
+            <button (click)="openEmailModal()"
+              class="flex-1 md:flex-initial flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>Email</span>
+            </button>
+
+            <button (click)="openAddBuyerModal()"
+              class="flex-1 md:flex-initial flex items-center justify-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-4 py-2.5 rounded-xl shadow-xs transition-all cursor-pointer">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>+ Add Buyer</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB PILL NAVIGATION BAR -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs px-4 py-2 flex items-center gap-1.5 overflow-x-auto">
+          <button type="button" (click)="setActiveTab('overview')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'overview' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Details</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('contacts')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'contacts' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Contacts</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('property')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'property' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Property & Map</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('financial')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'financial' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Financials</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('cashbuyer')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'cashbuyer' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Cash Buyers</span>
+            <span *ngIf="totalBuyersCount()" class="bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded-full text-[10px] font-bold">{{ totalBuyersCount() }}</span>
+          </button>
+
+          <button type="button" (click)="setActiveTab('emails')"
+            class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all cursor-pointer"
+            [ngClass]="activeTab() === 'emails' ? 'bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs font-bold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100/80 border border-transparent'">
+            <span>Emails & Logs</span>
+            <span *ngIf="leadEmails().length" class="bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded-full text-[10px] font-bold">{{ leadEmails().length }}</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT PANEL -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-xs overflow-hidden p-6 md:p-8 min-h-[480px]">
+
+          <!-- OVERVIEW TAB -->
+          <div *ngIf="activeTab() === 'overview'" class="flex flex-col gap-6">
+
+            <!-- AI DEAL & ASSIGNED BUYER SUMMARY CARD -->
+            <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-teal-950 text-white rounded-2xl p-6 border border-teal-500/30 shadow-md relative overflow-hidden">
+              <div class="absolute -top-10 -right-10 w-40 h-40 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+              <div class="flex items-center justify-between pb-3.5 border-b border-white/10 flex-wrap gap-2">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center font-bold text-sm border border-teal-500/30">
+                    ✨
+                  </div>
+                  <div>
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider">AI Deal & Buyer Intelligence</h3>
+                    <p class="text-[11px] text-teal-200/70">Automated executive summary generated by Gemini AI</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span *ngIf="loadingAiSummary()" class="text-[11px] text-teal-300 font-medium flex items-center gap-1.5 animate-pulse">
+                    <span class="w-2 h-2 rounded-full bg-teal-400"></span> Generating AI Insights...
+                  </span>
+                  <button type="button" (click)="loadAiSummary()" [disabled]="loadingAiSummary()"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-teal-600 hover:bg-teal-500 rounded-xl shadow-xs transition-all cursor-pointer disabled:opacity-50">
+                    <span>↻ Refresh AI</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Summary Content -->
+              <div class="mt-4 text-xs leading-relaxed text-gray-200">
+                <div *ngIf="loadingAiSummary() && !aiSummary()" class="py-4 flex items-center gap-3 text-teal-200/80">
+                  <div class="w-4 h-4 border-2 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Analyzing property deal, assigned buyer profile, and portfolio capacity...</span>
+                </div>
+
+                <div *ngIf="aiSummary()" [innerHTML]="formatAiSummary(aiSummary())" class="whitespace-pre-line text-[13px] font-normal leading-relaxed text-slate-100">
+                </div>
+              </div>
+
+              <!-- Buyer & Other Leads Metadata Bar -->
+              <div *ngIf="aiAssignedBuyer()" class="mt-4 pt-3.5 border-t border-white/10 flex items-center justify-between flex-wrap gap-3">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="bg-teal-500/20 text-teal-200 border border-teal-500/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5">
+                    <span>👤 Assigned Buyer:</span>
+                    <strong class="text-white">{{ aiAssignedBuyer()?.name }}</strong>
+                  </span>
+                  <span class="text-[11px] text-gray-400 capitalize">• Status: {{ aiAssignedBuyer()?.status || 'Active' }}</span>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold px-3 py-1 rounded-full flex items-center gap-1.5">
+                    <span>📁 Other Leads Held:</span>
+                    <strong class="text-white">{{ aiOtherLeadsCount() }} other lead(s)</strong>
+                  </span>
+                </div>
+              </div>
+
+              <div *ngIf="!aiAssignedBuyer() && !loadingAiSummary()" class="mt-4 pt-3 border-t border-white/10 text-[11px] text-amber-300/80 flex items-center gap-1.5">
+                <span>⚠️ No buyer currently assigned to this lead deal.</span>
+              </div>
+            </div>
+
+            <!-- Primary Contact & Property Location Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Contact Summary -->
+              <div class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-4">
+                <h3 class="text-sm font-bold text-gray-800 border-b border-gray-200 pb-3">Primary Contact Summary</h3>
+              <div class="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <span class="text-gray-400 font-medium">Contact Name:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().name || 'N/A' }}</p>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">Phone Number:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().mobilenumber || 'N/A' }}</p>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">Email Address:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().email || 'N/A' }}</p>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">Owner Name:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().ownername || 'N/A' }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Property Summary -->
+            <div class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-4">
+              <h3 class="text-sm font-bold text-gray-800 border-b border-gray-200 pb-3">Property Location Summary</h3>
+              <div class="grid grid-cols-2 gap-4 text-xs">
+                <div class="col-span-2">
+                  <span class="text-gray-400 font-medium">Property Address:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().propertyAddress || leadData().ownermailingaddress || 'N/A' }}</p>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">City, State, Zip:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">
+                    {{ leadData().city || '' }}{{ leadData().city && leadData().state ? ', ' : '' }}{{ leadData().state || '' }} {{ leadData().zip || '' }}
+                  </p>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">Property Type:</span>
+                  <p class="font-bold text-gray-800 mt-0.5">{{ leadData().propertytype || 'Residential' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+          <!-- CONTACTS TAB -->
+          <div *ngIf="activeTab() === 'contacts'" class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-4">
+            <h3 class="text-sm font-bold text-gray-800 border-b border-gray-200 pb-3">Detailed Owner & Contact Profiles</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              <div class="flex flex-col gap-3 bg-white p-4 rounded-lg border border-gray-200">
+                <span class="text-xs font-bold text-teal-700 uppercase tracking-wider">Primary Contact</span>
+                <p><strong>Name:</strong> {{ leadData().name || 'N/A' }}</p>
+                <p><strong>Phone:</strong> {{ leadData().mobilenumber || 'N/A' }}</p>
+                <p><strong>Email:</strong> {{ leadData().email || 'N/A' }}</p>
+              </div>
+              <div class="flex flex-col gap-3 bg-white p-4 rounded-lg border border-gray-200">
+                <span class="text-xs font-bold text-teal-700 uppercase tracking-wider">Property Owner Record</span>
+                <p><strong>Owner Name:</strong> {{ leadData().ownername || 'N/A' }}</p>
+                <p><strong>Mailing Address:</strong> {{ leadData().ownermailingaddress || 'N/A' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- PROPERTY TAB -->
+          <div *ngIf="activeTab() === 'property'" class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-6">
+            <h3 class="text-sm font-bold text-gray-800 border-b border-gray-200 pb-3">Property Details & Map Location</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="flex flex-col gap-4 bg-white p-5 rounded-xl border border-gray-200 text-xs">
+                <div>
+                  <span class="text-gray-400 font-medium">Property Address</span>
+                  <p class="font-bold text-gray-800 mt-1 text-sm">{{ leadData().propertyAddress || 'N/A' }}</p>
+                </div>
+                <div class="grid grid-cols-3 gap-4">
+                  <div>
+                    <span class="text-gray-400 font-medium">City</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().city || 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">State</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().state || 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">Zip Code</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().zip || 'N/A' }}</p>
+                  </div>
+                </div>
+                <div>
+                  <span class="text-gray-400 font-medium">Property Type</span>
+                  <p class="font-bold text-gray-800 mt-1">{{ leadData().propertytype || 'Residential' }}</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-2xs h-80 relative">
+                <iframe *ngIf="safeMapUrl()" [src]="safeMapUrl()" class="absolute inset-0 w-full h-full border-none" allowfullscreen="" loading="lazy"></iframe>
+                <div *ngIf="!safeMapUrl()" class="absolute inset-0 flex items-center justify-center text-gray-400 text-xs italic">
+                  No address available for map visualization.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FINANCIALS TAB -->
+          <div *ngIf="activeTab() === 'financial'" class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-6">
+            <h3 class="text-sm font-bold text-gray-800 border-b border-gray-200 pb-3">Financial Metrics & Mortgages</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              <!-- Valuation Summary -->
+              <div class="flex flex-col gap-4 bg-white p-5 rounded-xl border border-gray-200">
+                <span class="text-xs font-bold text-teal-700 uppercase tracking-wider border-b border-gray-100 pb-2">Estimated Value & Equity</span>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <span class="text-gray-400 font-medium">Estimated Value</span>
+                    <p class="font-bold text-gray-800 mt-1 text-sm">
+                      {{ leadData().estimatedvalue != null ? ('$' + (leadData().estimatedvalue | number)) : 'N/A' }}
+                    </p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">Estimated Equity</span>
+                    <p class="font-bold text-gray-800 mt-1 text-sm">
+                      {{ leadData().estimatedequity != null ? ('$' + (leadData().estimatedequity | number)) : 'N/A' }}
+                    </p>
+                  </div>
+                  <div class="col-span-2">
+                    <span class="text-gray-400 font-medium">Total Liens / Mortgages</span>
+                    <p class="font-bold text-rose-600 mt-1 text-sm">
+                      {{ leadData().estimatedtotallens != null ? ('$' + (leadData().estimatedtotallens | number)) : 'N/A' }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mortgage Loan details -->
+              <div class="flex flex-col gap-4 bg-white p-5 rounded-xl border border-gray-200">
+                <span class="text-xs font-bold text-teal-700 uppercase tracking-wider border-b border-gray-100 pb-2">Loan & Mortgage Breakdown</span>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <span class="text-gray-400 font-medium">Loan Amount</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().loanamount != null ? ('$' + (leadData().loanamount | number)) : 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">Interest Rate</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().loaninterest != null ? (leadData().loaninterest + '%') : 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">Loan Term</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().loanterm != null ? (leadData().loanterm + ' years') : 'N/A' }}</p>
+                  </div>
+                  <div>
+                    <span class="text-gray-400 font-medium">Loan Payment</span>
+                    <p class="font-bold text-gray-800 mt-1">{{ leadData().loanpayment != null ? ('$' + (leadData().loanpayment | number) + '/mo') : 'N/A' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BUYER DETAILS TAB -->
+          <app-lead-cash-buyers *ngIf="activeTab() === 'cashbuyer'"
+            [leadId]="leadId()"
+            [leadData]="leadData()"
+            (leadUpdated)="onLeadUpdated()"
+            (buyerCountChange)="totalBuyersCount.set($event)"
+            (toast)="showToast($event)">
+          </app-lead-cash-buyers>
+
+          <!-- EMAILS TAB -->
+          <div *ngIf="activeTab() === 'emails'" class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-6">
+            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-bold text-gray-800">Lead Email History</h3>
+                <span class="text-xs text-gray-400">({{ leadEmails().length }} logged)</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <a [routerLink]="['/email']" [queryParams]="{ leadId: leadId() }" class="text-xs font-semibold text-teal-700 hover:underline">
+                  Open in Email Hub
+                </a>
+                <button (click)="openEmailModal()" class="bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-2xs transition-all cursor-pointer">
+                  Send Email
+                </button>
+              </div>
+            </div>
+
+            <div *ngIf="leadEmails().length" class="flex flex-col gap-3">
+              <div *ngFor="let email of leadEmails()" class="bg-white p-4 rounded-xl border border-gray-200 text-xs flex flex-col gap-2 shadow-2xs">
+                <div class="flex items-center justify-between border-b border-gray-100 pb-2">
+                  <div class="flex items-center gap-2">
+                    <span [class.bg-blue-100]="email.type === 'sent'" [class.text-blue-800]="email.type === 'sent'"
+                      [class.bg-emerald-100]="email.type === 'received'" [class.text-emerald-800]="email.type === 'received'"
+                      class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider">
+                      {{ email.type === 'received' ? 'Received' : 'Sent' }}
+                    </span>
+                    <span class="font-bold text-gray-900">{{ email.subject }}</span>
+                  </div>
+                  <span class="text-gray-400 text-[11px] font-medium">{{ (email.dateCreated || email.createdAt) | date:'MMM d, y, h:mm a' }}</span>
+                </div>
+                <div class="flex items-center justify-between text-gray-500 text-[11px]">
+                  <span><strong>{{ email.type === 'received' ? 'From:' : 'To:' }}</strong> {{ email.type === 'received' ? email.from : email.to }}</span>
+                  <span class="capitalize px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gray-100 text-gray-700">{{ email.status }}</span>
+                </div>
+                <p class="text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100 text-xs whitespace-pre-wrap leading-relaxed mt-1">
+                  {{ email.message }}
+                </p>
+              </div>
+            </div>
+            <div *ngIf="!leadEmails().length" class="py-12 text-center flex flex-col items-center gap-2 bg-white rounded-xl border border-dashed border-gray-200">
+              <h4 class="text-xs font-bold text-gray-700">No Email History</h4>
+              <p class="text-[11px] text-gray-400">There are no emails sent or received for this lead yet.</p>
+              <button (click)="openEmailModal()" class="mt-2 px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white rounded-lg text-xs font-semibold">
+                Send First Email
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- MODAL: EDIT LEAD -->
+      <div *ngIf="isEditing()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl border border-gray-100 flex flex-col my-8 animate-scale-up">
+          <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-base font-bold text-gray-900">Edit Lead Information</h3>
+            <button (click)="isEditing.set(false)" class="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+          </header>
+
+          <form [formGroup]="editForm" (ngSubmit)="onSaveEdit()" class="flex-1 flex flex-col overflow-hidden">
+            <div class="px-6 py-6 overflow-y-auto flex-1 max-h-[70vh] grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Contact Name *</label>
+                <input type="text" formControlName="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Email Address</label>
+                <input type="email" formControlName="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Phone Number *</label>
+                <input type="text" formControlName="mobilenumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Owner Name</label>
+                <input type="text" formControlName="ownername" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Property Address</label>
+                <input type="text" formControlName="propertyAddress" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Mailing Address</label>
+                <input type="text" formControlName="ownermailingaddress" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">City</label>
+                <input type="text" formControlName="city" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-gray-500 font-bold mb-1">State</label>
+                  <input type="text" formControlName="state" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+                </div>
+                <div>
+                  <label class="block text-gray-500 font-bold mb-1">Zip</label>
+                  <input type="text" formControlName="zip" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+                </div>
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Property Type</label>
+                <select formControlName="propertytype" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white">
+                  <option value="Residential">Residential</option>
+                  <option value="Commercial">Commercial</option>
+                  <option value="Industrial">Industrial</option>
+                  <option value="Land">Land</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Lead Source</label>
+                <select formControlName="leadsource" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white">
+                  <option value="website">Web Form</option>
+                  <option value="referral">Referral</option>
+                  <option value="social media">Ad Campaign</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Lead Status</label>
+                <select formControlName="leadstatus" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white">
+                  <option *ngFor="let status of statusOptions()" [value]="status">{{ status }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Estimated Value ($)</label>
+                <input type="number" formControlName="estimatedvalue" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Total Liens ($)</label>
+                <input type="number" formControlName="estimatedtotallens" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Estimated Equity ($)</label>
+                <input type="number" formControlName="estimatedequity" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Loan Amount ($)</label>
+                <input type="number" formControlName="loanamount" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="block text-gray-500 font-bold mb-1">Interest (%)</label>
+                  <input type="number" step="0.01" formControlName="loaninterest" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+                </div>
+                <div>
+                  <label class="block text-gray-500 font-bold mb-1">Loan Term (Yrs)</label>
+                  <input type="number" formControlName="loanterm" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+                </div>
+              </div>
+              <div>
+                <label class="block text-gray-500 font-bold mb-1">Monthly Payment ($)</label>
+                <input type="number" formControlName="loanpayment" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+              </div>
+            </div>
+
+            <footer class="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3 bg-gray-50/50">
+              <button type="button" (click)="isEditing.set(false)" class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer">Cancel</button>
+              <button type="submit" [disabled]="editForm.invalid || isSubmitting()" class="px-5 py-2 bg-teal-700 hover:bg-teal-800 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer">
+                Save Changes
+              </button>
+            </footer>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL: DELETE CONFIRMATION -->
+      <div *ngIf="showDeleteConfirm()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md border border-gray-100 overflow-hidden animate-scale-up">
+          <div class="p-6 text-center">
+            <h3 class="text-base font-bold text-gray-900">Are you sure?</h3>
+            <p class="text-xs text-gray-500 mt-2">This action cannot be undone. The lead and associations will be permanently removed.</p>
+          </div>
+          <footer class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3">
+            <button (click)="showDeleteConfirm.set(false)" class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer text-xs">Cancel</button>
+            <button (click)="onDeleteLead()" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-xs">Delete Lead</button>
+          </footer>
+        </div>
+      </div>
+
+      <!-- MODAL: SEND EMAIL -->
+      <div *ngIf="showEmailModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg border border-gray-100 flex flex-col animate-scale-up overflow-hidden">
+          <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-sm font-bold text-gray-900">Send Email</h3>
+            <button (click)="closeEmailModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1">✕</button>
+          </header>
+
+          <form [formGroup]="emailForm" (ngSubmit)="sendEmail()">
+            <div class="p-6 flex flex-col gap-4 text-xs">
+              <div class="flex items-center justify-between bg-gray-50 px-3.5 py-2 rounded-lg border border-gray-200/80 text-xs">
+                <span class="text-gray-500 font-bold text-[11px] uppercase tracking-wide">From:</span>
+                <div class="flex items-center gap-1.5 font-semibold text-gray-800">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span>{{ currentUserEmail() }}</span>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-gray-600 font-bold mb-1">To *</label>
+                <input type="email" formControlName="to" placeholder="recipient@example.com" class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium">
+              </div>
+
+              <div>
+                <label class="block text-gray-600 font-bold mb-1">Subject *</label>
+                <input type="text" formControlName="subject" placeholder="Subject..." class="w-full px-3.5 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium">
+              </div>
+
+              <div>
+                <label class="block text-gray-600 font-bold mb-1">Message *</label>
+                <textarea rows="6" formControlName="message" placeholder="Type your message here..." class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 font-medium text-xs leading-relaxed"></textarea>
+              </div>
+            </div>
+
+            <footer class="px-6 py-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-between gap-3">
+              <button type="button" (click)="openNativeMailClient()" class="text-indigo-600 hover:underline text-xs font-semibold cursor-pointer">
+                Open in Mail App
+              </button>
+              <div class="flex items-center gap-2">
+                <button type="button" (click)="closeEmailModal()" class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer text-xs">Cancel</button>
+                <button type="submit" [disabled]="emailForm.invalid || isSendingEmail()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-xs">
+                  {{ isSendingEmail() ? 'Sending...' : 'Send Email' }}
+                </button>
+              </div>
+            </footer>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>

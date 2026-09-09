@@ -1,0 +1,102 @@
+<aside class="flex flex-col justify-between items-center h-full w-full bg-gradient-to-b from-gray-50 to-gray-100 border-r border-gray-200/50 py-4 relative overflow-hidden">
+  <div class="flex flex-col items-center gap-2 w-full">
+    <!-- Logo -->
+    <div class="flex items-center justify-center w-full px-2 pb-3 cursor-pointer group/logo" routerLink="/">
+      <img src="/images.png" alt="Logo" class="w-11 h-11 rounded-[14px] object-cover transition-transform duration-300 group-hover/logo:scale-108 shadow-sm">
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex flex-col items-center gap-1 w-full px-2">
+      <a [routerLink]="dashboardPath"
+         class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-teal-600 hover:bg-teal-600/5 transition-all duration-200 group/item"
+         [class.!text-teal-600]="isActive(dashboardPath)"
+         [class.!bg-teal-600/10]="isActive(dashboardPath)"
+      >
+        <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+          <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          </svg>
+        </div>
+        <span class="absolute left-16 top-1/2 -translate-y-1/2 scale-0 opacity-0 group-hover/item:scale-100 group-hover/item:opacity-100 bg-gray-800 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg whitespace-nowrap pointer-events-none z-30 shadow-md transition-all duration-250 origin-left">Leads Dashboard</span>
+        <!-- Active indicator bar -->
+        <span *ngIf="isActive(dashboardPath)" class="absolute -right-2 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-teal-600 to-teal-400 rounded-l-sm shadow-sm"></span>
+      </a>
+
+      <a [routerLink]="uploadExcelPath"
+         class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-teal-600 hover:bg-teal-600/5 transition-all duration-200 group/item"
+         [class.!text-teal-600]="isActive(uploadExcelPath)"
+         [class.!bg-teal-600/10]="isActive(uploadExcelPath)"
+      >
+        <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+          <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+        </div>
+        <span class="absolute left-16 top-1/2 -translate-y-1/2 scale-0 opacity-0 group-hover/item:scale-100 group-hover/item:opacity-100 bg-gray-800 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg whitespace-nowrap pointer-events-none z-30 shadow-md transition-all duration-250 origin-left">Upload Excel Leads</span>
+        <!-- Active indicator bar -->
+        <span *ngIf="isActive(uploadExcelPath)" class="absolute -right-2 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-teal-600 to-teal-400 rounded-l-sm shadow-sm"></span>
+      </a>
+
+
+      <a [routerLink]="drivepath" class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-teal-600 hover:bg-teal-600/5 transition-all duration-200 group/item"
+         [class.!text-teal-600]="isActive(drivepath)"
+         [class.!bg-teal-600/10]="isActive(drivepath)"
+      >
+        <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+          <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z" />
+          </svg>
+        </div>
+        <span class="absolute left-16 top-1/2 -translate-y-1/2 scale-0 opacity-0 group-hover/item:scale-100 group-hover/item:opacity-100 bg-gray-800 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg whitespace-nowrap pointer-events-none z-30 shadow-md transition-all duration-250 origin-left">Drive Storage</span>
+        <!-- Active indicator bar -->
+        <span *ngIf="isActive(drivepath)" class="absolute -right-2 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-teal-600 to-teal-400 rounded-l-sm shadow-sm"></span>
+      </a>
+
+      <a [routerLink]="emailPath" class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-teal-600 hover:bg-teal-600/5 transition-all duration-200 group/item"
+         [class.!text-teal-600]="isActive(emailPath)"
+         [class.!bg-teal-600/10]="isActive(emailPath)"
+      >
+        <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+          <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <span class="absolute left-16 top-1/2 -translate-y-1/2 scale-0 opacity-0 group-hover/item:scale-100 group-hover/item:opacity-100 bg-gray-800 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg whitespace-nowrap pointer-events-none z-30 shadow-md transition-all duration-250 origin-left">Email Flow</span>
+        <!-- Active indicator bar -->
+        <span *ngIf="isActive(emailPath)" class="absolute -right-2 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-gradient-to-b from-teal-600 to-teal-400 rounded-l-sm shadow-sm"></span>
+      </a>
+
+      <a [routerLink]="buyerspath" class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-teal-600 hover:bg-teal-600/5 transition-all duration-200 group/item"
+         [class.!text-teal-600]="isActive(buyerspath)"
+         [class.!bg-teal-600/10]="isActive(buyerspath)">
+        <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+        
+           <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+           </svg>
+
+        </div>   
+        </a>
+          
+    </nav>
+  </div>
+
+  <div class="flex flex-col items-center gap-2 w-full px-2 pb-1">
+    <!-- User Avatar -->
+    <div class="w-10 h-10 rounded-full p-[2px] bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 shadow-sm hover:scale-108 transition-all duration-300 cursor-pointer" [title]="authService.currentUser() || 'User'">
+      <div class="w-full h-full rounded-full bg-gradient-to-br from-pink-500 via-purple-500 to-indigo-500 flex items-center justify-center text-white text-xs font-bold select-none tracking-wide">
+        {{ authService.currentUser()?.charAt(0)?.toUpperCase() || 'U' }}
+      </div>
+    </div>
+
+    <!-- Logout Button -->
+    <button (click)="onLogout()" class="w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer relative text-gray-400 hover:text-red-500 hover:bg-red-500/5 transition-all duration-200 border-none bg-transparent group/item" title="Logout">
+      <div class="flex items-center justify-center transition-transform duration-200 group-hover/item:scale-110 group-active/item:scale-95">
+        <svg class="w-5.5 h-5.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      </div>
+      <span class="absolute left-16 top-1/2 -translate-y-1/2 scale-0 opacity-0 group-hover/item:scale-100 group-hover/item:opacity-100 bg-gray-800 text-white text-[11px] font-semibold py-1.5 px-2.5 rounded-lg whitespace-nowrap pointer-events-none z-30 shadow-md transition-all duration-250 origin-left">Sign Out</span>
+    </button>
+  </div>
+</aside>

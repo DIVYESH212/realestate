@@ -1,0 +1,199 @@
+<div class="h-screen w-screen flex flex-col md:flex-row bg-[#0c1b22] text-gray-800 font-sans overflow-hidden" style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;">
+  
+  <div class="hidden md:flex md:w-1/2 text-white flex-col justify-between p-12 relative overflow-hidden" style="background: linear-gradient(135deg, #007a78 0%, #009a97 40%, #007a78 100%);">
+    <div class="absolute w-[500px] h-[500px] rounded-full blur-[100px] -top-32 -left-32" style="background: rgba(255,255,255,0.06);"></div>
+    <div class="absolute w-[300px] h-[300px] rounded-full blur-[80px] -bottom-20 -right-20" style="background: rgba(0,200,190,0.08);"></div>
+
+    <div class="flex-1 flex items-center justify-center z-10 my-8">
+      <div class="w-full max-w-sm rounded-[2rem] overflow-hidden border-4 border-white/10 shadow-2xl bg-teal-950/20 aspect-[4/3] flex items-center justify-center p-2">
+        <img src="/crm_mobile_mockup.png" alt="CRM Mobile App Mockup" class="w-full h-full object-cover rounded-[1.5rem] shadow-inner animate-float" style="animation: floatSubtle 5s ease-in-out infinite;" />
+      </div>
+    </div>
+
+    <div class="w-full max-w-lg mx-auto flex flex-col gap-6 z-10">
+      
+
+      <div class="flex items-center gap-3 pl-4">
+        <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
+          <img src="/ryan_dossey.png" alt="Ryan Dossey Profile" class="w-full h-full object-cover" />
+        </div>
+        <div>
+          <p class="text-[11px] text-teal-100/80">Real Estate Investor and Mentor</p>
+        </div>
+      </div>  
+
+      <div class="flex items-center gap-3 pt-2 pl-4">
+        <a href="javascript:void(0)" class="h-9 px-3 bg-black hover:bg-black/90 rounded border border-white/10 flex items-center gap-2 transition-all">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-.1.7.77-1.7 1.9-2.06 4.67-.34 6.89 1.25 1.66 3.02 2.7 4.18 2.7.13 0 .26-.01.39-.04 1.13-.22 2.06-.94 2.71-1.89l.86-.01zM15.97 4.17c.6-1.12.37-2.4-.23-3.17.6 0 1.2.22 1.63.74.88 1.05.65 2.48-.02 3.16-.17.17-.37.31-.58.42-.51-1.15-.8-1.15-.8-1.15z" />
+          </svg>
+          <div class="text-left font-sans">
+            <p class="text-[7px] text-white/60 uppercase">Download on the</p>
+            <p class="text-[10px] text-white font-bold leading-tight -mt-0.5">App Store</p>
+          </div>
+        </a>
+        <a href="javascript:void(0)" class="h-9 px-3 bg-black hover:bg-black/90 rounded border border-white/10 flex items-center gap-2 transition-all">
+          <svg class="w-4.5 h-4.5 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 5.27v13.46c0 .88.72 1.27 1.47.79l11.45-7.3c.75-.48.75-1.26 0-1.74L4.47 4.48c-.75-.48-1.47-.09-1.47.79z" />
+          </svg>
+          <div class="text-left font-sans">
+            <p class="text-[7px] text-white/60 uppercase">GET IT ON</p>
+            <p class="text-[10px] text-white font-bold leading-tight -mt-0.5">Google Play</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-full md:w-1/2 bg-white flex flex-col items-center justify-center p-8 md:p-16 relative overflow-y-auto" style="box-shadow: -20px 0 60px rgba(0,0,0,0.04);">
+    <div class="w-full max-w-sm flex flex-col gap-6">
+      
+      <!-- Logo Header -->
+      <div class="flex items-center gap-2 mb-2 select-none justify-center">
+        <div class="w-8 h-8 flex flex-col justify-between items-center text-[#007a78]">
+          <svg class="w-full h-full" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+        </div>
+        <span class="text-2xl font-bold tracking-tight text-gray-900 font-sans">
+          <span class="text-[#007a78]">RE</span>simpli
+        </span>
+      </div>
+
+      <!-- Welcome Banner -->
+      <div class="text-center">
+        <h2 class="text-2xl font-bold text-gray-900 mb-1">
+          {{ isLoginMode() ? 'Sign in to your account' : 'Create your account' }}
+        </h2>
+        <p class="text-xs text-gray-500">
+          {{ isLoginMode() ? 'Welcome back! Please enter your details.' : 'Join us! Fill in the registration details.' }}
+        </p>
+      </div>
+
+      <!-- Validation Error Box -->
+      <div *ngIf="passcodeError()" class="w-full bg-rose-50 border border-rose-200 text-rose-600 text-xs rounded-lg p-3.5 animate-fade-in text-center font-medium">
+        {{ passcodeError() }}
+      </div>
+
+      <!-- Success Info Box -->
+      <div *ngIf="successMessage()" class="w-full bg-emerald-50 border border-emerald-200 text-emerald-600 text-xs rounded-lg p-3.5 animate-fade-in text-center font-medium">
+        {{ successMessage() }}
+      </div>
+
+      <!-- Input Fields -->
+      <div class="flex flex-col gap-4">
+        <!-- Username Field -->
+        <div class="relative w-full">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Username</label>
+          <input 
+            type="text" 
+            placeholder="Username (5 to 10 characters)" 
+            [ngModel]="usernameText()"
+            (ngModelChange)="usernameText.set($event)"
+            class="w-full bg-gray-50 hover:bg-gray-100/50 border border-gray-200 focus:border-[#007a78] focus:bg-white rounded-lg px-3.5 py-2.5 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400"
+          />
+        </div>
+
+        <!-- Email Field (Signup Mode) -->
+        <div *ngIf="!isLoginMode()" class="relative w-full animate-fade-in">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Email Address</label>
+          <input 
+            type="email" 
+            placeholder="name@example.com" 
+            [ngModel]="emailText()"
+            (ngModelChange)="emailText.set($event)"
+            class="w-full bg-gray-50 hover:bg-gray-100/50 border border-gray-200 focus:border-[#007a78] focus:bg-white rounded-lg px-3.5 py-2.5 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400"
+          />
+        </div>
+
+        <!-- Mobile Number Field (Signup Mode) -->
+        <div *ngIf="!isLoginMode()" class="relative w-full animate-fade-in">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Mobile Number</label>
+          <input 
+            type="tel" 
+            placeholder="10 digit number" 
+            [ngModel]="mobileNumberText()"
+            (ngModelChange)="mobileNumberText.set($event)"
+            class="w-full bg-gray-50 hover:bg-gray-100/50 border border-gray-200 focus:border-[#007a78] focus:bg-white rounded-lg px-3.5 py-2.5 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400"
+          />
+        </div>
+
+        <!-- Password Field -->
+        <div class="relative w-full">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Password</label>
+          <div class="relative">
+            <input 
+              [type]="showPassword() ? 'text' : 'password'" 
+              placeholder="••••••••" 
+              [ngModel]="passwordText()"
+              (ngModelChange)="passwordText.set($event)"
+              (keyup.enter)="onSubmit()"
+              class="w-full bg-gray-50 hover:bg-gray-100/50 border border-gray-200 focus:border-[#007a78] focus:bg-white rounded-lg pl-3.5 pr-10 py-2.5 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400"
+            />
+            <button 
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-[#007a78] bg-transparent border-none outline-none cursor-pointer"
+            >
+              <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirm Password (Signup Mode) -->
+        <div *ngIf="!isLoginMode()" class="relative w-full animate-fade-in">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Confirm Password</label>
+          <input 
+            [type]="showPassword() ? 'text' : 'password'" 
+            placeholder="••••••••" 
+            [ngModel]="confirmPasswordText()"
+            (ngModelChange)="confirmPasswordText.set($event)"
+            (keyup.enter)="onSubmit()"
+            class="w-full bg-gray-50 hover:bg-gray-100/50 border border-gray-200 focus:border-[#007a78] focus:bg-white rounded-lg px-3.5 py-2.5 text-sm text-gray-800 outline-none transition-all placeholder:text-gray-400"
+          />
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col gap-3">
+        <button 
+          (click)="onSubmit()"
+          class="w-full bg-[#007a78] hover:bg-[#006868] text-white font-semibold rounded-lg px-3.5 py-2.5 text-sm transition-all shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer" style="box-shadow: 0 4px 14px rgba(0, 122, 120, 0.3);"
+        >
+          {{ isLoginMode() ? 'Login' : 'Sign Up' }}
+        </button>
+
+        <div *ngIf="isLoginMode()" class="text-center text-xs mt-2">
+          <button 
+            (click)="forgotPassword()"
+            class="text-[#007a78] hover:underline font-semibold bg-transparent border-none outline-none cursor-pointer"
+          >
+            Forgot password?
+          </button>
+        </div>
+
+        <div class="text-center text-xs mt-1">
+          <span class="text-gray-500">
+            {{ isLoginMode() ? "Don't have an account?" : "Already have an account?" }}
+          </span>
+          <button 
+            (click)="isLoginMode() ? signup() : login()"
+            class="text-[#007a78] hover:underline font-semibold ml-1 bg-transparent border-none outline-none cursor-pointer"
+          >
+            {{ isLoginMode() ? 'Create an account' : 'Sign In' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Policy -->
+      <p class="text-[10px] text-gray-400 text-center leading-relaxed mt-2 border-t border-gray-100 pt-4">
+        By continuing you agree to our <a href="javascript:void(0)" class="text-[#007a78] hover:underline font-semibold">Privacy Policy.</a>
+      </p>
+    </div>
+  </div>

@@ -1,0 +1,555 @@
+<div
+  *ngIf="isOpen"
+  class="fixed inset-0 z-50 flex justify-end bg-gray-900/60 backdrop-blur-xs p-0 animate-fade-in"
+>
+  <!-- Backdrop click to close -->
+  <div class="absolute inset-0 cursor-pointer" (click)="onClose()"></div>
+
+  <!-- Drawer Panel -->
+  <div
+    class="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-10 animate-slide-in-right overflow-y-auto"
+  >
+    <!-- Drawer Header -->
+    <div
+      class="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50"
+    >
+      <div class="flex items-center gap-2">
+        <svg
+          class="w-5 h-5 text-teal-600"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+          />
+        </svg>
+        <span class="font-bold text-gray-900 text-sm">Filter Leads</span>
+      </div>
+      <button
+        (click)="onClose()"
+        class="text-gray-400 hover:text-gray-600 bg-transparent border-none cursor-pointer p-1 rounded-lg hover:bg-gray-100 transition-colors"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="flex border-b border-gray-100 bg-gray-50/50">
+      <button
+        (click)="activeFilterTab.set('simple')"
+        class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition-all cursor-pointer bg-transparent"
+        [class.border-teal-600]="activeFilterTab() === 'simple'"
+        [class.text-teal-600]="activeFilterTab() === 'simple'"
+        [class.border-transparent]="activeFilterTab() !== 'simple'"
+        [class.text-gray-400]="activeFilterTab() !== 'simple'"
+        [class.hover:text-gray-600]="activeFilterTab() !== 'simple'"
+      >
+        Simple Filters
+      </button>
+      <button
+        (click)="activeFilterTab.set('advanced')"
+        class="flex-1 py-3 text-xs font-bold text-center border-b-2 transition-all cursor-pointer bg-transparent"
+        [class.border-teal-600]="activeFilterTab() === 'advanced'"
+        [class.text-teal-600]="activeFilterTab() === 'advanced'"
+        [class.border-transparent]="activeFilterTab() !== 'advanced'"
+        [class.text-gray-400]="activeFilterTab() !== 'advanced'"
+        [class.hover:text-gray-600]="activeFilterTab() !== 'advanced'"
+      >
+        Advanced Filters
+      </button>
+    </div>
+
+    <!-- Drawer Content (Form Fields) -->
+    <div class="flex-1 px-6 py-4 space-y-5 overflow-y-auto">
+      <!-- SIMPLE FILTERS TAB CONTENT -->
+      <div class="space-y-4" *ngIf="activeFilterTab() === 'simple'">
+        <p class="text-xs text-gray-500 leading-normal mb-3">
+          Select the filter criteria below to configure their values in the Advanced Filters tab:
+        </p>
+        <div class="flex flex-col gap-3">
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showPropertyInfoFilter()"
+              (change)="showPropertyInfoFilter.set(!showPropertyInfoFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Property Info / Search</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">
+                Filter by property address, owner name, etc.
+              </p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showDateRangeFilter()"
+              (change)="showDateRangeFilter.set(!showDateRangeFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Date Range</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">Filter by lead creation date</p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showMarketSegmentFilter()"
+              (change)="showMarketSegmentFilter.set(!showMarketSegmentFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Market Segment</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">
+                Filter by residential, commercial, etc.
+              </p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showAddressAvailabilityFilter()"
+              (change)="
+                showAddressAvailabilityFilter.set(!showAddressAvailabilityFilter())
+              "
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Address Availability</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">Has or missing property address</p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showPropertyValueFilter()"
+              (change)="showPropertyValueFilter.set(!showPropertyValueFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Property Value</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">
+                Filter by estimated property value ($)
+              </p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showLoanAmountFilter()"
+              (change)="showLoanAmountFilter.set(!showLoanAmountFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Loan Amount</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">Filter by active mortgage loan amount ($)</p>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 text-xs text-gray-700 cursor-pointer select-none p-2.5 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all border border-gray-100/50"
+          >
+            <input
+              type="checkbox"
+              [checked]="showBuyerDetailsFilter()"
+              (change)="showBuyerDetailsFilter.set(!showBuyerDetailsFilter())"
+              class="w-4.5 h-4.5 rounded text-teal-600 focus:ring-teal-500 border-gray-300"
+            />
+            <div>
+              <span class="font-bold text-gray-800">Buyer Details</span>
+              <p class="text-[10px] text-gray-400 mt-0.5">
+                Filter by associated buyer name, phone, or email
+              </p>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- ADVANCED FILTERS TAB CONTENT -->
+      <div class="space-y-4" *ngIf="activeFilterTab() === 'advanced'">
+        <div
+          *ngIf="
+            !showPropertyInfoFilter() &&
+            !showDateRangeFilter() &&
+            !showMarketSegmentFilter() &&
+            !showAddressAvailabilityFilter() &&
+            !showPropertyValueFilter() &&
+            !showLoanAmountFilter() &&
+            !showBuyerDetailsFilter()
+          "
+          class="text-center py-8 text-gray-400"
+        >
+          <svg
+            class="w-8 h-8 mx-auto mb-2 text-gray-300"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+            />
+          </svg>
+          <p class="text-xs font-semibold">No filter criteria selected</p>
+          <p class="text-[10px] text-gray-400 mt-1">
+            Go to the "Simple Filters" tab to select the criteria you want to configure.
+          </p>
+        </div>
+
+        <!-- 1. Property Info Filter -->
+        <div *ngIf="showPropertyInfoFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-1"
+            >Property Info / Search</label
+          >
+          <input
+            type="text"
+            [ngModel]="propertyInfo()"
+            (ngModelChange)="propertyInfo.set($event)"
+            placeholder="Search address, contact, etc."
+            class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+          />
+        </div>
+
+        <!-- 2. Date Range Filter -->
+        <div *ngIf="showDateRangeFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-2">Date Range</label>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <span class="text-[10px] text-gray-400 font-semibold mb-1 block">From</span>
+              <input
+                type="date"
+                [ngModel]="startDate()"
+                (ngModelChange)="startDate.set($event)"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+            <div>
+              <span class="text-[10px] text-gray-400 font-semibold mb-1 block">To</span>
+              <input
+                type="date"
+                [ngModel]="endDate()"
+                (ngModelChange)="endDate.set($event)"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Market Segment Filter -->
+        <div *ngIf="showMarketSegmentFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-2">Market Segment</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="segmentFilter"
+                value="all"
+                [checked]="marketSegmentFilter() === 'all'"
+                (change)="marketSegmentFilter.set('all')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>All</span>
+            </label>
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="segmentFilter"
+                value="residential"
+                [checked]="marketSegmentFilter() === 'residential'"
+                (change)="marketSegmentFilter.set('residential')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>Residential</span>
+            </label>
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="segmentFilter"
+                value="commercial"
+                [checked]="marketSegmentFilter() === 'commercial'"
+                (change)="marketSegmentFilter.set('commercial')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>Commercial</span>
+            </label>
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="segmentFilter"
+                value="industrial"
+                [checked]="marketSegmentFilter() === 'industrial'"
+                (change)="marketSegmentFilter.set('industrial')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>Industrial</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 4. Address Availability Filter -->
+        <div *ngIf="showAddressAvailabilityFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-2"
+            >Address Availability</label
+          >
+          <div class="flex flex-col gap-2">
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="addrAvail"
+                value="all"
+                [checked]="addressAvailability() === 'all'"
+                (change)="addressAvailability.set('all')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>All Leads</span>
+            </label>
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="addrAvail"
+                value="available"
+                [checked]="addressAvailability() === 'available'"
+                (change)="addressAvailability.set('available')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>Has Property Address</span>
+            </label>
+            <label
+              class="flex items-center gap-2 text-xs text-gray-600 cursor-pointer p-2 rounded border border-gray-100 hover:bg-gray-50"
+            >
+              <input
+                type="radio"
+                name="addrAvail"
+                value="missing"
+                [checked]="addressAvailability() === 'missing'"
+                (change)="addressAvailability.set('missing')"
+                class="text-teal-600 focus:ring-teal-500"
+              />
+              <span>Missing Property Address</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 5. Property Value Filter -->
+        <div *ngIf="showPropertyValueFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-2">Property Value ($)</label>
+          <div class="space-y-2">
+            <select
+              [ngModel]="propertyValueOperator()"
+              (ngModelChange)="propertyValueOperator.set($event)"
+              class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+            >
+              <option value="all">Any Value</option>
+              <option value="greater">Greater than</option>
+              <option value="less">Less than</option>
+              <option value="range">In Range</option>
+            </select>
+
+            <div class="grid grid-cols-2 gap-3" *ngIf="propertyValueOperator() !== 'all'">
+              <div
+                *ngIf="
+                  propertyValueOperator() === 'greater' ||
+                  propertyValueOperator() === 'range'
+                "
+              >
+                <label class="block text-[10px] font-semibold text-gray-400 mb-1"
+                  >Min ($)</label
+                >
+                <input
+                  type="number"
+                  [ngModel]="propertyValueMin()"
+                  (ngModelChange)="propertyValueMin.set($event)"
+                  placeholder="e.g. 100000"
+                  class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+                />
+              </div>
+              <div
+                *ngIf="
+                  propertyValueOperator() === 'less' || propertyValueOperator() === 'range'
+                "
+              >
+                <label class="block text-[10px] font-semibold text-gray-400 mb-1"
+                  >Max ($)</label
+                >
+                <input
+                  type="number"
+                  [ngModel]="propertyValueMax()"
+                  (ngModelChange)="propertyValueMax.set($event)"
+                  placeholder="e.g. 500000"
+                  class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Loan Amount Filter -->
+        <div *ngIf="showLoanAmountFilter()" class="border-b border-gray-100 pb-4">
+          <label class="block text-xs font-bold text-gray-700 mb-2">Loan Amount ($)</label>
+          <div class="space-y-2">
+            <select
+              [ngModel]="loanAmountOperator()"
+              (ngModelChange)="loanAmountOperator.set($event)"
+              class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+            >
+              <option value="all">Any Amount</option>
+              <option value="greater">Greater than</option>
+              <option value="less">Less than</option>
+              <option value="range">In Range</option>
+            </select>
+
+            <div class="grid grid-cols-2 gap-3" *ngIf="loanAmountOperator() !== 'all'">
+              <div *ngIf="loanAmountOperator() === 'greater' || loanAmountOperator() === 'range'">
+                <label class="block text-[10px] font-semibold text-gray-400 mb-1"
+                  >Min ($)</label
+                >
+                <input
+                  type="number"
+                  [ngModel]="loanAmountMin()"
+                  (ngModelChange)="loanAmountMin.set($event)"
+                  placeholder="e.g. 50000"
+                  class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+                />
+              </div>
+              <div *ngIf="loanAmountOperator() === 'less' || loanAmountOperator() === 'range'">
+                <label class="block text-[10px] font-semibold text-gray-400 mb-1"
+                  >Max ($)</label
+                >
+                <input
+                  type="number"
+                  [ngModel]="loanAmountMax()"
+                  (ngModelChange)="loanAmountMax.set($event)"
+                  placeholder="e.g. 300000"
+                  class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 7. Buyer Details Filter -->
+        <div *ngIf="showBuyerDetailsFilter()" class="space-y-3">
+          <label class="block text-xs font-bold text-gray-700">Buyer Details</label>
+          <div class="space-y-2">
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-400 mb-1">Buyer Name</label>
+              <input
+                type="text"
+                [ngModel]="buyerName()"
+                (ngModelChange)="buyerName.set($event)"
+                placeholder="Enter buyer name"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-400 mb-1">Buyer Phone</label>
+              <input
+                type="text"
+                [ngModel]="buyerMobile()"
+                (ngModelChange)="buyerMobile.set($event)"
+                placeholder="Enter phone number"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-400 mb-1"
+                >Buyer Address</label
+              >
+              <input
+                type="text"
+                [ngModel]="buyerAddress()"
+                (ngModelChange)="buyerAddress.set($event)"
+                placeholder="Enter address"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+
+            <div>
+              <label class="block text-[10px] font-semibold text-gray-400 mb-1">Buyer Email</label>
+              <input
+                type="email"
+                [ngModel]="buyerEmail()"
+                (ngModelChange)="buyerEmail.set($event)"
+                placeholder="Enter email"
+                class="w-full text-xs border border-gray-200 focus:border-teal-500 rounded-lg p-2 outline-none transition-all"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer Footer (Buttons) -->
+    <div
+      class="px-6 py-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between gap-3 sticky bottom-0"
+    >
+      <button
+        (click)="onResetAll()"
+        class="text-xs font-semibold text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer hover:underline"
+      >
+        Reset All
+      </button>
+      <div class="flex items-center gap-2">
+        <button
+          (click)="onClose()"
+          class="text-xs font-semibold text-gray-700 bg-white hover:bg-gray-50 border border-gray-200 px-4 py-2 rounded-lg cursor-pointer transition-all"
+        >
+          Cancel
+        </button>
+        <button
+          (click)="onApply()"
+          class="text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 border-none px-5 py-2 rounded-lg cursor-pointer transition-all shadow-sm"
+        >
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

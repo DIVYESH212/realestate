@@ -1,0 +1,502 @@
+<div class="flex h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#1f1f1f] font-sans antialiased select-none"
+     (dragover)="onDragOver($event)"
+     (dragleave)="isDragOver = false"
+     (drop)="onDrop($event)">
+
+  <!-- SIDEBAR -->
+  <app-sidebar></app-sidebar>
+
+  <!-- MAIN WRAPPER -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+    <!-- HEADER BAR -->
+    <header class="h-16 bg-[#f8fafd] px-6 flex items-center justify-between gap-4 flex-shrink-0 z-20">
+      
+      <!-- Search Input -->
+      <div class="flex-1 max-w-2xl">
+        <div class="relative flex items-center w-full">
+          <i class="fa-solid fa-magnifying-glass text-gray-400 absolute left-4 text-xs pointer-events-none"></i>
+          <input type="text"
+                 [ngModel]="searchQuery()"
+                 (ngModelChange)="searchQuery.set($event)"
+                 [placeholder]="isTrashView() ? 'Search in Trash' : 'Search in Drive'"
+                 class="w-full pl-10 pr-10 py-2.5 bg-[#edf2fc] hover:bg-[#e4ebf8] focus:bg-white text-xs text-gray-800 rounded-full border border-transparent focus:border-blue-400 focus:shadow-sm outline-none transition-all" />
+          <button *ngIf="searchQuery()" (click)="searchQuery.set('')" class="absolute right-4 text-gray-400 hover:text-gray-600 cursor-pointer text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2.5 flex-shrink-0">
+        <ng-container *ngIf="!isTrashView()">
+          <input #fileUploadInput type="file" multiple (change)="onFileUpload($event)" class="hidden" />
+
+          <button (click)="fileUploadInput.click()"
+                  class="flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-slate-50 text-gray-800 text-xs font-medium rounded-xl shadow-2xs border border-gray-200 cursor-pointer transition-colors">
+            <i class="fa-solid fa-cloud-arrow-up text-teal-600 text-xs"></i>
+            <span>Upload File</span>
+          </button>
+
+          <button (click)="isCreateFolderOpen.set(true)"
+                  class="flex items-center gap-2 px-3.5 py-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-medium rounded-xl shadow-2xs cursor-pointer transition-colors">
+            <i class="fa-solid fa-folder-plus text-xs"></i>
+            <span>New Folder</span>
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isTrashView()">
+          <button *ngIf="allItems().length > 0"
+                  (click)="emptyTrash()"
+                  class="flex items-center gap-2 px-3.5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-xl shadow-2xs cursor-pointer transition-colors">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+            <span>Empty Trash</span>
+          </button>
+        </ng-container>
+
+        <div class="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#edf2fc] rounded-full text-[11px] text-gray-600 font-medium border border-blue-100/50">
+          <i class="fa-solid fa-hard-drive text-teal-600 text-[11px]"></i>
+          <span>{{ totalStorage() }}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- BREADCRUMBS & CATEGORY CHIPS -->
+    <div class="px-6 py-2 flex flex-col gap-2 flex-shrink-0 bg-[#f8fafd] border-b border-gray-200/50">
+      
+      <!-- Breadcrumbs Navigation -->
+      <div class="flex items-center gap-2 text-xs text-gray-600 font-medium">
+        <button *ngIf="isTrashView()" (click)="navigateTo('/')" class="hover:text-gray-900 cursor-pointer flex items-center gap-1.5 text-gray-500 hover:underline">
+          <i class="fa-solid fa-house text-[11px]"></i>
+          <span>My Drive</span>
+        </button>
+        <i *ngIf="isTrashView()" class="fa-solid fa-chevron-right text-[9px] text-gray-400"></i>
+
+        <i *ngIf="!isTrashView()" class="fa-solid fa-house text-[11px] text-gray-500"></i>
+        <ng-container *ngFor="let crumb of breadcrumbs; let last = last">
+          <button (click)="navigateTo(crumb.path)"
+                  [class.text-teal-700]="last && !isTrashView()"
+                  [class.text-red-600]="last && isTrashView()"
+                  [class.font-bold]="last"
+                  [class.hover:underline]="!last"
+                  class="hover:text-gray-900 cursor-pointer transition-colors flex items-center gap-1.5">
+            <i *ngIf="isTrashView()" class="fa-solid fa-trash-can text-xs text-red-500 mr-0.5"></i>
+            <span>{{ crumb.name }}</span>
+          </button>
+          <i *ngIf="!last" class="fa-solid fa-chevron-right text-[9px] text-gray-400"></i>
+        </ng-container>
+      </div>
+
+      <!-- Category Filter Chips (Pill Buttons) -->
+      <div class="flex items-center justify-between gap-2 overflow-x-auto pb-1">
+        <div class="flex items-center gap-2">
+          <ng-container *ngFor="let cat of categories">
+            <button *ngIf="cat.key !== 'trash'"
+                    (click)="setCategory(cat.key)"
+                    [class.bg-[#c2e7ff]]="selectedCategory() === cat.key"
+                    [class.text-[#001d35]]="selectedCategory() === cat.key"
+                    [class.font-semibold]="selectedCategory() === cat.key"
+                    [class.border-transparent]="selectedCategory() === cat.key"
+                    [class.shadow-2xs]="selectedCategory() === cat.key"
+                    [class.bg-white]="selectedCategory() !== cat.key"
+                    [class.text-gray-600]="selectedCategory() !== cat.key"
+                    [class.border-gray-200]="selectedCategory() !== cat.key"
+                    class="px-3.5 py-1.5 rounded-full text-xs border transition-all cursor-pointer hover:bg-slate-100/90 whitespace-nowrap flex items-center gap-1.5">
+              <i [class]="cat.icon + ' text-[11px]'"></i>
+              <span>{{ cat.label }}</span>
+            </button>
+          </ng-container>
+        </div>
+
+        <button (click)="setCategory('trash')"
+                [class.bg-red-100]="selectedCategory() === 'trash'"
+                [class.text-red-700]="selectedCategory() === 'trash'"
+                [class.font-semibold]="selectedCategory() === 'trash'"
+                [class.border-transparent]="selectedCategory() === 'trash'"
+                [class.shadow-2xs]="selectedCategory() === 'trash'"
+                [class.bg-white]="selectedCategory() !== 'trash'"
+                [class.text-gray-600]="selectedCategory() !== 'trash'"
+                [class.border-gray-200]="selectedCategory() !== 'trash'"
+                class="px-3.5 py-1.5 rounded-full text-xs border transition-all cursor-pointer hover:bg-red-50 hover:text-red-600 hover:border-red-200 whitespace-nowrap flex items-center gap-1.5 ml-auto flex-shrink-0">
+          <i class="fa-solid fa-trash-can text-[11px] text-red-500"></i>
+          <span>Trash</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENT BODY -->
+    <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6 relative">
+
+      <!-- INITIAL FULL LOADING -->
+      <div *ngIf="isLoading()" class="flex items-center justify-center py-16 text-teal-600 gap-2.5">
+        <i class="fa-solid fa-circle-notch fa-spin text-xl"></i>
+        <span class="text-xs text-gray-500 font-medium">Loading items...</span>
+      </div>
+
+      <!-- EMPTY STATE: NO ITEMS AT ALL -->
+      <div *ngIf="!isLoading() && allItems().length === 0"
+           class="flex flex-col items-center justify-center py-16 text-center space-y-3">
+        <div [ngClass]="isTrashView() ? 'bg-red-50 border-red-100 text-red-500' : 'bg-teal-50 border-teal-100 text-teal-600'"
+             class="w-16 h-16 rounded-2xl border flex items-center justify-center shadow-2xs">
+          <i [class]="isTrashView() ? 'fa-solid fa-trash-can text-2xl' : 'fa-solid fa-folder-open text-2xl'"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-gray-800">
+            {{ isTrashView() ? 'Trash is empty' : 'This folder is empty' }}
+          </h3>
+          <p class="text-xs text-gray-500 mt-1">
+            {{ isTrashView() ? 'Items deleted from your drive will appear here.' : 'Upload files or create a subfolder using the buttons above.' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE: FILTER RETURNED 0 MATCHES -->
+      <div *ngIf="!isLoading() && allItems().length > 0 && filteredItems().length === 0"
+           class="flex flex-col items-center justify-center py-16 text-center space-y-3">
+        <div class="w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400">
+          <i class="fa-solid fa-filter-circle-xmark text-xl text-gray-400"></i>
+        </div>
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700">No {{ selectedCategoryLabel() }} found</h3>
+          <p class="text-xs text-gray-400 mt-1">There are no items matching this category in the current view.</p>
+          <button (click)="setCategory('all')" class="mt-3 px-3.5 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-medium cursor-pointer hover:bg-teal-700 transition-colors inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-xs"></i>
+            <span>Show all files</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- VIEW CONTROLS & HEADER -->
+      <div *ngIf="!isLoading() && filteredItems().length > 0" class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-gray-600 uppercase tracking-wider">{{ selectedCategoryLabel() }}</span>
+          <span class="text-xs text-gray-400 font-medium">({{ filteredItems().length }})</span>
+        </div>
+
+        <!-- View Mode Switcher -->
+        <div class="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200/50 shadow-inner">
+          <button
+            class="w-9.5 h-8.5 rounded-lg border-none bg-transparent flex items-center justify-center cursor-pointer text-gray-400 transition-all duration-200 hover:text-gray-700 active:scale-95"
+            [class.!bg-white]="viewMode() === 'list'"
+            [class.!text-teal-600]="viewMode() === 'list'"
+            [class.shadow-sm]="viewMode() === 'list'"
+            (click)="viewMode.set('list')"
+            title="List View"
+          >
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+          </button>
+          <button
+            class="w-9.5 h-8.5 rounded-lg border-none bg-transparent flex items-center justify-center cursor-pointer text-gray-400 transition-all duration-200 hover:text-gray-700 active:scale-95"
+            [class.!bg-white]="viewMode() === 'grid'"
+            [class.!text-teal-600]="viewMode() === 'grid'"
+            [class.shadow-sm]="viewMode() === 'grid'"
+            (click)="viewMode.set('grid')"
+            title="Grid View"
+          >
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- UNIFIED LINEAR ITEMS SECTION -->
+      <section *ngIf="!isLoading() && filteredItems().length > 0" class="space-y-3">
+        
+        <!-- GRID VIEW (Linear all folders and files) -->
+        <div *ngIf="viewMode() === 'grid'"
+             class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3.5">
+           
+          <div *ngFor="let item of filteredItems()"
+               (click)="openItem(item)"
+               class="group relative bg-[#edf2fa] hover:bg-[#e4ebf8] border border-[#d3e3fd]/60 rounded-2xl p-3 h-48 flex flex-col justify-between transition-all duration-150 hover:shadow-md cursor-pointer">
+            
+            <!-- Card Top Header -->
+            <div class="flex items-center justify-between gap-1.5 h-6 flex-shrink-0">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <!-- Icon based on category or directory -->
+                <div [ngClass]="{
+                  'bg-amber-400': item.isDirectory || item.category === 'folder',
+                  'bg-emerald-600': !item.isDirectory && item.category === 'sheet',
+                  'bg-blue-600': !item.isDirectory && item.category === 'doc',
+                  'bg-amber-500': !item.isDirectory && item.category === 'slide',
+                  'bg-rose-600': !item.isDirectory && item.category === 'pdf',
+                  'bg-indigo-600': !item.isDirectory && item.category === 'image',
+                  'bg-purple-600': !item.isDirectory && item.category === 'video',
+                  'bg-slate-600': !item.isDirectory && !['sheet','doc','slide','pdf','image','video'].includes(item.category)
+                }" class="w-5 h-5 rounded-[4px] flex items-center justify-center text-white text-[10px] flex-shrink-0 shadow-2xs">
+                  <i *ngIf="item.isDirectory || item.category === 'folder'" class="fa-solid fa-folder text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'sheet'" class="fa-solid fa-file-excel text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'doc'" class="fa-solid fa-file-word text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'slide'" class="fa-solid fa-file-powerpoint text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'pdf'" class="fa-solid fa-file-pdf text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'image'" class="fa-solid fa-file-image text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'video'" class="fa-solid fa-file-video text-[10px]"></i>
+                  <i *ngIf="!item.isDirectory && !['sheet','doc','slide','pdf','image','video'].includes(item.category)" class="fa-solid fa-paperclip text-[10px]"></i>
+                </div>
+                <span class="text-[12px] font-medium text-gray-800 truncate" [title]="item.name">{{ item.name }}</span>
+              </div>
+
+              <!-- Menu Button -->
+              <div class="relative flex-shrink-0">
+                <button (click)="toggleMenu(item._id, $event)" class="text-gray-400 hover:text-gray-800 w-6 h-6 flex items-center justify-center rounded-full hover:bg-black/5 cursor-pointer">
+                  <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div *ngIf="activeMenuId() === item._id"
+                     class="absolute right-0 top-6 w-44 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-30 text-xs text-gray-700">
+                  
+                  <!-- Normal Drive Actions -->
+                  <ng-container *ngIf="!isTrashView()">
+                    <button (click)="openItem(item); activeMenuId.set(null)" class="w-full px-3 py-1.5 text-left hover:bg-slate-100 flex items-center gap-2.5">
+                      <i *ngIf="item.isDirectory" class="fa-solid fa-folder-open text-amber-500 w-4 text-center"></i>
+                      <i *ngIf="!item.isDirectory" class="fa-solid fa-eye text-blue-500 w-4 text-center"></i>
+                      <span>{{ item.isDirectory ? 'Open' : 'Preview' }}</span>
+                    </button>
+                    <button *ngIf="!item.isDirectory" (click)="downloadItem(item, $event)" class="w-full px-3 py-1.5 text-left hover:bg-slate-100 flex items-center gap-2.5">
+                      <i class="fa-solid fa-download text-emerald-600 w-4 text-center"></i>
+                      <span>Download</span>
+                    </button>
+                    <button (click)="openRename(item, $event)" class="w-full px-3 py-1.5 text-left hover:bg-slate-100 flex items-center gap-2.5">
+                      <i class="fa-solid fa-pen-to-square text-amber-600 w-4 text-center"></i>
+                      <span>Rename</span>
+                    </button>
+                    <button (click)="deleteItem(item, $event)" class="w-full px-3 py-1.5 text-left hover:bg-red-50 text-red-600 flex items-center gap-2.5">
+                      <i class="fa-solid fa-trash-can text-red-500 w-4 text-center"></i>
+                      <span>Move to Trash</span>
+                    </button>
+                  </ng-container>
+
+                  <!-- Trash View Actions -->
+                  <ng-container *ngIf="isTrashView()">
+                    <button *ngIf="!item.isDirectory" (click)="openItem(item); activeMenuId.set(null)" class="w-full px-3 py-1.5 text-left hover:bg-slate-100 flex items-center gap-2.5">
+                      <i class="fa-solid fa-eye text-blue-500 w-4 text-center"></i>
+                      <span>Preview</span>
+                    </button>
+                    <button (click)="restoreItem(item, $event)" class="w-full px-3 py-1.5 text-left hover:bg-teal-50 text-teal-700 flex items-center gap-2.5">
+                      <i class="fa-solid fa-rotate-left text-teal-600 w-4 text-center"></i>
+                      <span>Restore</span>
+                    </button>
+                    <button (click)="hardDeleteItem(item, $event)" class="w-full px-3 py-1.5 text-left hover:bg-red-50 text-red-600 flex items-center gap-2.5">
+                      <i class="fa-solid fa-trash-can text-red-600 w-4 text-center"></i>
+                      <span>Delete Forever</span>
+                    </button>
+                  </ng-container>
+
+                </div>
+              </div>
+            </div>
+
+            <!-- Thumbnail / Folder Center Preview Area -->
+            <div class="w-full h-24 flex-shrink-0 bg-white rounded-lg border border-gray-200/70 p-2 flex items-center justify-center overflow-hidden">
+              <div *ngIf="item.isDirectory || item.category === 'folder'" class="text-amber-500 font-semibold text-xs flex flex-col items-center gap-1.5">
+                <i class="fa-solid fa-folder text-4xl text-amber-400"></i>
+                <span class="text-[10px] text-gray-400">Folder</span>
+              </div>
+              <img *ngIf="!item.isDirectory && item.publicUrl && item.category === 'image'" [src]="driveService.getFileViewUrl(item.publicUrl)" class="w-full h-full object-cover rounded" />
+              <div *ngIf="!item.isDirectory && item.category !== 'image'" class="text-center text-gray-500 text-[11px] flex flex-col items-center justify-center">
+                <i *ngIf="item.category === 'sheet'" class="fa-solid fa-file-excel text-3xl text-emerald-500 mb-1"></i>
+                <i *ngIf="item.category === 'doc'" class="fa-solid fa-file-word text-3xl text-blue-500 mb-1"></i>
+                <i *ngIf="item.category === 'slide'" class="fa-solid fa-file-powerpoint text-3xl text-amber-500 mb-1"></i>
+                <i *ngIf="item.category === 'pdf'" class="fa-solid fa-file-pdf text-rose-500 mb-1"></i>
+                <i *ngIf="item.category === 'video'" class="fa-solid fa-file-video text-3xl text-purple-500 mb-1"></i>
+                <i *ngIf="!['sheet','doc','slide','pdf','video'].includes(item.category)" class="fa-solid fa-file text-3xl text-gray-400 mb-1"></i>
+                <div class="font-bold text-gray-700">{{ item.extension ? ('.' + item.extension) : item.category }}</div>
+                <div class="text-[10px] text-gray-400 mt-0.5">{{ formatBytes(item.size) }}</div>
+              </div>
+            </div>
+
+            <!-- Footer Caption -->
+            <div class="flex items-center gap-1.5 text-[11px] text-gray-500 h-5 flex-shrink-0">
+              <span class="w-4 h-4 rounded-full bg-gradient-to-tr from-teal-500 to-indigo-600 flex items-center justify-center text-[8px] text-white">
+                <i class="fa-solid fa-user"></i>
+              </span>
+              <span class="truncate">{{ formatBytes(item.size) }}</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- LIST VIEW (Linear table) -->
+        <div *ngIf="viewMode() === 'list'" class="bg-white rounded-xl border border-gray-200 overflow-hidden text-xs">
+          <table class="w-full text-left">
+            <thead class="bg-[#edf2fa] text-gray-600 font-semibold border-b border-gray-200">
+              <tr>
+                <th class="py-2.5 px-4">Name</th>
+                <th class="py-2.5 px-4">Type</th>
+                <th class="py-2.5 px-4">Size</th>
+                <th class="py-2.5 px-4">Modified</th>
+                <th class="py-2.5 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr *ngFor="let item of filteredItems()" (click)="openItem(item)" class="hover:bg-blue-50/40 cursor-pointer transition-colors">
+                <td class="py-2.5 px-4 font-medium text-gray-800 truncate max-w-xs flex items-center gap-2.5">
+                  <i *ngIf="item.isDirectory || item.category === 'folder'" class="fa-solid fa-folder text-amber-500 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'sheet'" class="fa-solid fa-file-excel text-emerald-600 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'doc'" class="fa-solid fa-file-word text-blue-600 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'slide'" class="fa-solid fa-file-powerpoint text-amber-500 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'pdf'" class="fa-solid fa-file-pdf text-rose-600 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'image'" class="fa-solid fa-file-image text-indigo-600 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && item.category === 'video'" class="fa-solid fa-file-video text-purple-600 text-sm w-4 text-center"></i>
+                  <i *ngIf="!item.isDirectory && !['sheet','doc','slide','pdf','image','video'].includes(item.category)" class="fa-solid fa-paperclip text-gray-500 text-sm w-4 text-center"></i>
+                  <span class="truncate">{{ item.name }}</span>
+                </td>
+                <td class="py-2.5 px-4 text-gray-500 uppercase font-mono text-[10px]">
+                  {{ (item.isDirectory || item.category === 'folder') ? 'Folder' : (item.extension || item.category) }}
+                </td>
+                <td class="py-2.5 px-4 text-gray-500 font-mono">
+                  {{ (item.isDirectory || item.category === 'folder') ? '-' : formatBytes(item.size) }}
+                </td>
+                <td class="py-2.5 px-4 text-gray-500">
+                  {{ item.updatedAt ? (item.updatedAt | date:'shortDate') : '-' }}
+                </td>
+                
+                <td class="py-2.5 px-4 text-right space-x-1.5">
+                  <!-- Normal View Actions -->
+                  <ng-container *ngIf="!isTrashView()">
+                    <button *ngIf="!item.isDirectory" (click)="downloadItem(item, $event)" class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded cursor-pointer transition-colors" title="Download">
+                      <i class="fa-solid fa-download text-xs"></i>
+                    </button>
+                    <button (click)="openRename(item, $event)" class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded cursor-pointer transition-colors" title="Rename">
+                      <i class="fa-solid fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button (click)="deleteItem(item, $event)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer transition-colors" title="Move to Trash">
+                      <i class="fa-solid fa-trash-can text-xs"></i>
+                    </button>
+                  </ng-container>
+
+                  <!-- Trash View Actions -->
+                  <ng-container *ngIf="isTrashView()">
+                    <button (click)="restoreItem(item, $event)" class="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded cursor-pointer transition-colors" title="Restore">
+                      <i class="fa-solid fa-rotate-left text-xs"></i>
+                    </button>
+                    <button (click)="hardDeleteItem(item, $event)" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded cursor-pointer transition-colors" title="Delete Forever">
+                      <i class="fa-solid fa-trash-can text-xs text-red-500"></i>
+                    </button>
+                  </ng-container>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- DRAG DROP OVERLAY -->
+    <div *ngIf="isDragOver" class="absolute inset-0 bg-blue-600/10 backdrop-blur-xs border-2 border-dashed border-blue-500 z-50 flex items-center justify-center text-blue-800 font-bold text-sm pointer-events-none">
+      <i class="fa-solid fa-cloud-arrow-up text-2xl mr-2"></i> Drop files here to upload to current folder
+    </div>
+
+  </div>
+
+  <!-- CREATE FOLDER MODAL -->
+  <div *ngIf="isCreateFolderOpen()" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 max-w-xs w-full text-xs space-y-3 shadow-xl border border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <i class="fa-solid fa-folder-plus text-teal-600"></i>
+          <span>New folder</span>
+        </h3>
+        <button (click)="isCreateFolderOpen.set(false)" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <input type="text" [(ngModel)]="newFolderName" (keyup.enter)="createFolder()" placeholder="Folder name"
+             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-teal-500 text-xs" />
+      <div class="flex justify-end gap-2">
+        <button (click)="isCreateFolderOpen.set(false)" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer">Cancel</button>
+        <button (click)="createFolder()" class="px-3 py-1.5 bg-teal-600 text-white font-semibold rounded-xl cursor-pointer">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RENAME MODAL -->
+  <div *ngIf="renameFile()" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl p-5 max-w-xs w-full text-xs space-y-3 shadow-xl border border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900 flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-teal-600"></i>
+          <span>Rename</span>
+        </h3>
+        <button (click)="renameFile.set(null)" class="text-gray-400 hover:text-gray-600 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <input type="text" [(ngModel)]="newFileName" (keyup.enter)="saveRename()"
+             class="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl outline-none focus:border-teal-500 text-xs" />
+      <div class="flex justify-end gap-2">
+        <button (click)="renameFile.set(null)" class="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer">Cancel</button>
+        <button (click)="saveRename()" class="px-3 py-1.5 bg-teal-600 text-white font-semibold rounded-xl cursor-pointer">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW MODAL -->
+  <div *ngIf="previewFile()" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex flex-col text-white">
+    <header class="h-14 px-6 bg-black/40 border-b border-white/10 flex items-center justify-between flex-shrink-0">
+      <span class="text-sm font-semibold truncate">{{ previewFile()?.name }}</span>
+      <div class="flex items-center gap-2">
+        <ng-container *ngIf="!isTrashView()">
+          <button (click)="downloadItem(previewFile()!)" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i>
+            <span>Download</span>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="isTrashView()">
+          <button (click)="restoreItem(previewFile()!)" class="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate-left"></i>
+            <span>Restore</span>
+          </button>
+          <button (click)="hardDeleteItem(previewFile()!)" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5">
+            <i class="fa-solid fa-trash-can"></i>
+            <span>Delete Forever</span>
+          </button>
+        </ng-container>
+        <button (click)="previewFile.set(null)" class="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-xs font-semibold rounded-lg cursor-pointer flex items-center gap-1.5">
+          <i class="fa-solid fa-xmark"></i>
+          <span>Close</span>
+        </button>
+      </div>
+    </header>
+    <div class="flex-1 p-6 flex items-center justify-center overflow-auto">
+      <div class="bg-white text-gray-900 rounded-2xl p-6 max-w-2xl w-full shadow-2xl space-y-4 my-auto">
+        <div class="flex justify-between items-center border-b pb-3">
+          <h2 class="text-base font-bold text-gray-900 truncate mr-2">{{ previewFile()?.name }}</h2>
+          <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full uppercase flex-shrink-0">{{ previewFile()?.category }}</span>
+        </div>
+        <!-- Image Preview -->
+        <div *ngIf="previewFile()?.publicUrl && previewFile()?.category === 'image'" class="flex justify-center max-h-96 bg-gray-50 rounded-xl p-2 overflow-hidden">
+          <img [src]="driveService.getFileViewUrl(previewFile()?.publicUrl)" class="max-h-96 max-w-full object-contain rounded-lg shadow-xs" />
+        </div>
+
+        <!-- Video Preview Player -->
+        <div *ngIf="previewFile()?.publicUrl && previewFile()?.category === 'video'" class="flex justify-center max-h-96 bg-black rounded-xl p-1 overflow-hidden shadow-inner">
+          <video [src]="driveService.getFileViewUrl(previewFile()?.publicUrl)" controls playsinline autoplay class="max-h-96 w-full object-contain rounded-lg bg-black">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        <!-- Audio Preview Player -->
+        <div *ngIf="previewFile()?.publicUrl && previewFile()?.category === 'audio'" class="flex flex-col items-center justify-center py-6 bg-gray-50 rounded-xl p-4 space-y-3">
+          <i class="fa-solid fa-file-audio text-4xl text-purple-600"></i>
+          <audio [src]="driveService.getFileViewUrl(previewFile()?.publicUrl)" controls class="w-full max-w-md"></audio>
+        </div>
+
+        <!-- File Metadata Information -->
+        <div class="text-xs text-gray-600 space-y-2 pt-2 border-t border-gray-100">
+          <div><b>File Name:</b> {{ previewFile()?.name }}</div>
+          <div><b>Size:</b> {{ formatBytes(previewFile()?.size || 0) }}</div>
+          <div><b>Type:</b> {{ previewFile()?.extension ? ('.' + previewFile()?.extension) : previewFile()?.category }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

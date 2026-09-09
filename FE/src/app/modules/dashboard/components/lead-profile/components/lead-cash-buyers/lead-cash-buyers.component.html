@@ -1,0 +1,270 @@
+<div class="bg-gray-50/50 p-6 rounded-xl border border-gray-100 flex flex-col gap-5">
+  <!-- TOP TOOLBAR -->
+  <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+    <div>
+      <h3 class="text-sm font-bold text-gray-900">Cash Buyers Directory</h3>
+      <p class="text-[11px] text-gray-500">View cash buyers and manage associations with this lead</p>
+    </div>
+    <div class="flex items-center gap-2 w-full sm:w-auto">
+      <a routerLink="/buyer" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 rounded-lg shadow-2xs transition-all">
+        <span>Open Directory</span>
+      </a>
+      <button (click)="openAddBuyerModal()" class="inline-flex items-center justify-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg shadow-2xs transition-all cursor-pointer">
+        <span>+ Add Buyer</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ASSIGNED BUYER SHOWCASE -->
+  <div *ngIf="primaryAssignedBuyer()" class="bg-gradient-to-r from-teal-900 via-slate-900 to-emerald-950 text-white rounded-2xl p-5 border border-teal-500/40 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+    <div class="flex items-center gap-3.5">
+      <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-teal-500 to-emerald-400 text-white font-extrabold text-base flex items-center justify-center shadow-md shrink-0">
+        {{ getInitials(primaryAssignedBuyer()?.name) }}
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full">
+            Active Assigned Buyer
+          </span>
+          <span class="text-xs font-bold capitalize text-teal-200">{{ primaryAssignedBuyer()?.status || 'assign' }}</span>
+        </div>
+        <a [routerLink]="['/buyer-profile', primaryAssignedBuyer()?._id || primaryAssignedBuyer()?.id]"
+          class="text-base font-bold text-white hover:text-teal-300 hover:underline mt-0.5 block">
+          {{ primaryAssignedBuyer()?.name }}
+        </a>
+        <p class="text-[11px] text-gray-300">{{ primaryAssignedBuyer()?.mobilenumber || 'No phone' }} • {{ primaryAssignedBuyer()?.email || 'No email' }}</p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-2 w-full md:w-auto">
+      <a *ngIf="primaryAssignedBuyer()?.mobilenumber" [href]="'tel:' + primaryAssignedBuyer()?.mobilenumber" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-xs transition-all">
+        <span>Call</span>
+      </a>
+      <button type="button" (click)="unassignBuyer(primaryAssignedBuyer())" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/20 hover:bg-rose-600/40 border border-rose-500/30 rounded-xl transition-all cursor-pointer">
+        <span>Unassign</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SEARCH & COUNT BAR -->
+  <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="text-xs font-bold text-gray-800">All Cash Buyers</span>
+      <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-gray-200 text-gray-700">{{ allBuyers().length }}</span>
+    </div>
+
+    <div class="relative flex-1 max-w-sm">
+      <input type="text" [ngModel]="buyerSearch()" (ngModelChange)="onBuyerSearchChange($event)"
+        placeholder="Search buyers by name, phone, email, address..."
+        class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-white border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition shadow-2xs" />
+      <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <button *ngIf="buyerSearch()" (click)="onBuyerSearchChange('')" class="absolute right-2.5 top-1.5 text-gray-400 hover:text-gray-600">✕</button>
+    </div>
+  </div>
+
+  <!-- LOADING SPINNER -->
+  <div *ngIf="loadingBuyers()" class="py-12 flex flex-col items-center justify-center gap-2">
+    <div class="w-8 h-8 border-3 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+    <span class="text-xs text-gray-500 font-semibold">Loading buyers...</span>
+  </div>
+
+  <!-- BUYERS TABLE -->
+  <div *ngIf="!loadingBuyers() && filteredBuyers().length" class="bg-white rounded-xl border border-gray-200 shadow-2xs overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs">
+        <thead class="bg-gray-50/90 border-b border-gray-200 text-gray-500 font-bold uppercase tracking-wider text-[11px]">
+          <tr>
+            <th class="py-3 px-4">Buyer</th>
+            <th class="py-3 px-4">Contact Info</th>
+            <th class="py-3 px-4">Property / Area</th>
+            <th class="py-3 px-4 text-center">Assigned Leads</th>
+            <th class="py-3 px-4 text-center">Deal Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          <tr *ngFor="let b of displayedBuyers(); trackBy: trackByBuyerId" class="hover:bg-teal-50/30 transition-colors" [ngClass]="b._id === primaryAssignedBuyer()?._id ? 'bg-teal-50/40' : ''">
+            <td class="py-3 px-4">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-600 text-white font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                  {{ getInitials(b.name) }}
+                </div>
+                <div>
+                  <a [routerLink]="['/buyer-profile', b._id || b.id]"
+                    class="font-bold text-gray-900 hover:text-teal-700 hover:underline block cursor-pointer">
+                    {{ b.name || 'Unnamed Buyer' }}
+                  </a>
+                  <span *ngIf="b.createdAt" class="text-[10px] text-gray-400">{{ b.createdAt | date:'mediumDate' }}</span>
+                </div>
+              </div>
+            </td>
+
+            <td class="py-3 px-4">
+              <div class="flex flex-col gap-0.5">
+                <a *ngIf="b.mobilenumber" [href]="'tel:' + b.mobilenumber" class="text-gray-700 hover:text-teal-700 font-medium">
+                  {{ b.mobilenumber }}
+                </a>
+                <span *ngIf="!b.mobilenumber" class="text-gray-400 italic">No phone</span>
+                <span *ngIf="b.email" class="text-gray-500 text-[11px]">{{ b.email }}</span>
+              </div>
+            </td>
+
+            <td class="py-3 px-4 text-gray-600 max-w-xs truncate font-medium">
+              {{ b.propertyAddress || '—' }}
+            </td>
+
+            <td class="py-3 px-4 text-center">
+              <span class="inline-flex items-center justify-center font-bold px-2.5 py-0.5 rounded-full text-xs shadow-2xs"
+                [ngClass]="getBuyerAssignedLeadCount(b) > 0 
+                  ? (isBuyerAssignedToThisLead(b) ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-indigo-50 text-indigo-700 border border-indigo-200') 
+                  : 'bg-gray-100 text-gray-500 border border-gray-200'">
+                {{ getBuyerAssignedLeadCount(b) }}
+              </span>
+            </td>
+
+            <td class="py-3 px-4 text-center">
+              <span *ngIf="isBuyerAssignedToThisLead(b)" class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-lg shadow-2xs">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>🎯 Assigned</span>
+              </span>
+              <button *ngIf="!isBuyerAssignedToThisLead(b) && primaryAssignedBuyer()" disabled
+                [title]="'Cannot assign: This lead already has an assigned buyer (' + primaryAssignedBuyer()?.name + ')'"
+                class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg cursor-not-allowed opacity-60">
+                <span>Lead Assigned</span>
+              </button>
+              <button *ngIf="!isBuyerAssignedToThisLead(b) && !primaryAssignedBuyer() && isBuyerAssignable(b)" (click)="assignBuyerToLead(b)" title="Assign this buyer to this lead"
+                class="inline-flex items-center gap-1 px-3 py-1 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg transition-colors cursor-pointer shadow-2xs">
+                <span>🎯 Assign</span>
+              </button>
+              <span *ngIf="!isBuyerAssignedToThisLead(b) && !primaryAssignedBuyer() && !isBuyerAssignable(b)" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-400 bg-gray-100 border border-gray-200 rounded-lg opacity-60">
+                <span>{{ b.status }}</span>
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- MAT-PAGINATOR -->
+    <div class="border-t border-gray-100 bg-white">
+      <mat-paginator
+        [length]="filteredBuyers().length"
+        [pageIndex]="buyerPageIndex()"
+        [pageSize]="buyerPageSize()"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        [showFirstLastButtons]="true"
+        (page)="onBuyerPageChange($event)">
+      </mat-paginator>
+    </div>
+  </div>
+
+  <!-- EMPTY BUYERS STATE -->
+  <div *ngIf="!loadingBuyers() && filteredBuyers().length === 0" class="py-12 text-center flex flex-col items-center gap-2 bg-white rounded-xl border border-dashed border-gray-200">
+    <h4 class="text-xs font-bold text-gray-700">
+      {{ buyerSearch() ? 'No Buyers Found for "' + buyerSearch() + '"' : 'No Cash Buyers Found' }}
+    </h4>
+    <p class="text-[11px] text-gray-400 max-w-sm">
+      {{ buyerSearch() ? 'Try clearing your search query to see all buyers.' : 'Click "+ Add Buyer" to link your first buyer.' }}
+    </p>
+    <div class="flex items-center gap-2 mt-2">
+      <button *ngIf="buyerSearch()" (click)="onBuyerSearchChange('')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+        Clear Search
+      </button>
+      <button (click)="openAddBuyerModal()" class="px-3 py-1.5 bg-teal-700 hover:bg-teal-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+        + Add Buyer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD BUYER -->
+<div *ngIf="showAddBuyerModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md border border-gray-100 overflow-hidden animate-scale-up">
+    <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h3 class="text-base font-bold text-gray-900">Link a Buyer Profile</h3>
+      <button (click)="closeAddBuyerModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer">✕</button>
+    </header>
+
+    <form [formGroup]="buyerForm" (ngSubmit)="submitAddBuyer()">
+      <div class="p-6 flex flex-col gap-4 text-xs">
+        <div>
+          <label class="block text-gray-500 font-bold mb-1">Buyer Name *</label>
+          <input type="text" formControlName="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+        </div>
+        <div>
+          <label class="block text-gray-500 font-bold mb-1">Mobile / Phone Number *</label>
+          <input type="text" formControlName="mobilenumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+        </div>
+        <div>
+          <label class="block text-gray-500 font-bold mb-1">Email Address *</label>
+          <input type="email" formControlName="email" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+        </div>
+        <div>
+          <label class="block text-gray-500 font-bold mb-1">Property Address</label>
+          <input type="text" formControlName="propertyAddress" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium">
+        </div>
+        <div>
+          <label class="block text-gray-500 font-bold mb-1">Status</label>
+          <select formControlName="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="hold">Hold</option>
+            <option value="assign" [disabled]="!!primaryAssignedBuyer()">
+              Assign{{ primaryAssignedBuyer() ? ' (Lead already assigned)' : '' }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <footer class="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex items-center justify-end gap-3">
+        <button type="button" (click)="closeAddBuyerModal()" class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer">Cancel</button>
+        <button type="submit" [disabled]="buyerForm.invalid || isSubmittingBuyer()" class="px-5 py-2 bg-teal-700 hover:bg-teal-800 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer">
+          Link Buyer
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: QUICK ASSIGN BUYER -->
+<div *ngIf="showQuickAssignModal()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md border border-gray-100 flex flex-col animate-scale-up overflow-hidden">
+    <header class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+          🎯
+        </div>
+        <h3 class="text-sm font-bold text-gray-900">Assign Cash Buyer to Deal</h3>
+      </div>
+      <button (click)="closeQuickAssignModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1">✕</button>
+    </header>
+
+    <div class="p-6 flex flex-col gap-4 text-xs">
+      <div>
+        <label class="block text-gray-700 font-bold mb-1.5">Select Buyer to Assign *</label>
+        <select [ngModel]="selectedBuyerToAssign()" (ngModelChange)="selectedBuyerToAssign.set($event)"
+          class="w-full px-3.5 py-2.5 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 font-medium bg-white text-xs">
+          <option value="">-- Choose an eligible buyer from directory --</option>
+          <option *ngFor="let b of allBuyers(); trackBy: trackByBuyerId" [value]="b._id || b.id" [disabled]="!isBuyerAssignable(b) || (primaryAssignedBuyer() && primaryAssignedBuyer()._id !== b._id)">
+            {{ b.name }} ({{ b.mobilenumber || b.phone || b.email || 'No contact' }}) - [{{ b.status || 'active' }}]
+          </option>
+        </select>
+      </div>
+
+      <div *ngIf="selectedBuyerToAssign()" class="p-3 bg-teal-50 rounded-xl border border-teal-100 text-[11px] text-teal-800">
+        This buyer will be designated as the primary assigned cash buyer for this lead property deal.
+      </div>
+    </div>
+
+    <footer class="px-6 py-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-end gap-2">
+      <button type="button" (click)="closeQuickAssignModal()" class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-500 hover:bg-gray-100 transition-all cursor-pointer text-xs">
+        Cancel
+      </button>
+      <button type="button" (click)="quickAssignSelectedBuyer()" [disabled]="!selectedBuyerToAssign()"
+        class="px-5 py-2 bg-teal-700 hover:bg-teal-800 disabled:opacity-50 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-xs">
+        Confirm Assignment
+      </button>
+    </footer>
+  </div>
+</div>

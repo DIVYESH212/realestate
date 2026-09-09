@@ -1,0 +1,411 @@
+
+<div class="flex h-screen w-screen overflow-hidden bg-[#f6f8fc] font-sans text-[#1f1f1f] antialiased selection:bg-[#c2e7ff] selection:text-[#001d35]">
+  
+  <!-- Global App Sidebar (Slim bar) -->
+  <app-sidebar class="w-16 h-screen shrink-0 sticky top-0 z-40 bg-white border-r border-gray-200/80 shadow-2xs"></app-sidebar>
+
+  <!-- Gmail Main Shell -->
+  <div class="flex-1 flex flex-col h-screen overflow-hidden">
+    
+    <!-- ========================================================================= -->
+    <!-- TOP HEADER SEARCH BAR                                                     -->
+    <!-- ========================================================================= -->
+    <header class="h-16 px-4 bg-[#f6f8fc] flex items-center justify-between gap-4 shrink-0 z-20">
+      
+      <!-- Brand & Mail Logo -->
+      <div class="flex items-center gap-3 w-56 shrink-0">
+        <button class="p-2 text-gray-600 hover:bg-gray-200/70 rounded-full transition-all cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+        
+        <div class="flex items-center gap-2 select-none cursor-pointer" (click)="setFolder('inbox')">
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none">
+            <path d="M1.5 6.75V17.25C1.5 18.4926 2.50736 19.5 3.75 19.5H6V9.75L12 14.25L18 9.75V19.5H20.25C21.4926 19.5 22.5 18.4926 22.5 17.25V6.75C22.5 4.88879 20.3168 3.89966 18.9142 5.09322L12 10.9937L5.08579 5.09322C3.68322 3.89966 1.5 4.88879 1.5 6.75Z" fill="#EA4335"/>
+            <path d="M18 19.5V9.75L22.5 13.5V17.25C22.5 18.4926 21.4926 19.5 20.25 19.5H18Z" fill="#4285F4"/>
+            <path d="M6 19.5V9.75L1.5 13.5V17.25C1.5 18.4926 2.50736 19.5 3.75 19.5H6Z" fill="#34A853"/>
+            <path d="M18 9.75L12 14.25L6 9.75V4.5L12 9.5L18 4.5V9.75Z" fill="#FBBC05"/>
+          </svg>
+          <span class="text-xl font-normal text-gray-700 tracking-tight" style="font-family: 'Product Sans', 'Inter', sans-serif;">Gmail</span>
+        </div>
+      </div>
+
+      <!-- Gmail Rounded Search Bar -->
+      <div class="flex-1 max-w-2xl">
+        <div class="relative flex items-center bg-[#eaf1fb] hover:bg-[#e1eaf7] focus-within:!bg-white focus-within:shadow-md focus-within:ring-1 focus-within:ring-gray-300 rounded-full transition-all duration-200 h-11 px-4">
+          
+          <button (click)="onSearch()" class="p-1 text-gray-600 hover:text-gray-900 rounded-full mr-2 cursor-pointer" title="Search">
+            <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+
+          <input 
+            type="text" 
+            [ngModel]="searchQuery()" 
+            (ngModelChange)="onSearchInput($event)"
+            (keyup.enter)="onSearch()"
+            placeholder="Search by subject, email, or contact..." 
+            class="w-full bg-transparent text-sm text-gray-800 placeholder-gray-500 outline-none font-normal"
+          />
+
+          <!-- Clear Search Button -->
+          <button 
+            *ngIf="searchQuery()" 
+            (click)="clearSearch()" 
+            class="p-1 text-gray-500 hover:text-gray-700 rounded-full cursor-pointer mr-1"
+            title="Clear search">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+
+          <!-- Search Filter Options Icon -->
+          <button class="p-1 text-gray-500 hover:text-gray-700 rounded-full cursor-pointer ml-1" title="Search options">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Top Right Status Indicator -->
+      <div class="flex items-center gap-2 justify-end w-56 shrink-0">
+        <div class="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Active</span>
+        </div>
+      </div>
+
+    </header>
+
+   <!-- sidebar -->
+    <div class="flex-1 flex overflow-hidden">
+      
+      <!-- LEFT SIDEBAR -->
+      <aside class="w-64 shrink-0 flex flex-col px-3 py-4 select-none overflow-y-auto">
+        <nav class="flex flex-col gap-0.5 text-sm font-medium">
+          <!-- Inbox Tab -->
+          <button 
+            (click)="setFolder('inbox')"
+            class="flex items-center justify-between px-4 py-2.5 rounded-full bg-[#d3e3fd] text-[#041e49] font-bold transition-colors cursor-pointer group">
+            <div class="flex items-center gap-4">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+              </svg>
+              <span>Inbox</span>
+            </div>
+            <span *ngIf="filteredEmails().length > 0" class="text-xs px-2 py-0.5 rounded-full font-bold bg-white text-gray-800 shadow-2xs">
+              {{ filteredEmails().length }}
+            </span>
+          </button>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT CARD -->
+      <main class="flex-1 bg-white rounded-2xl mr-3 mb-3 shadow-sm border border-gray-200/80 flex flex-col overflow-hidden">
+       
+
+<!-- EMAIL DETAIL THREAD VIEW    -->
+
+        <article *ngIf="selectedEmail()" class="flex-1 flex flex-col h-full overflow-hidden animate-fade-in">
+          
+          <!-- Detail View Action Bar -->
+          <div class="h-12 px-4 border-b border-gray-200/80 flex items-center justify-between gap-2 shrink-0 bg-white">
+            
+            <div class="flex items-center gap-1">
+              <!-- Back to List -->
+              <button 
+                (click)="closeEmailDetail()" 
+                title="Back to Inbox"
+                class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+              </button>
+
+              <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+              <!-- Delete -->
+              <button 
+                (click)="confirmDeleteEmail(selectedEmail()!)" 
+                title="Delete"
+                class="p-2 text-gray-600 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Email Message Thread Content -->
+          <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-6 max-w-4xl">
+            
+            <!-- Subject Title Header -->
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+              <div class="flex items-center gap-3 flex-wrap">
+                <h2 class="text-xl font-normal text-gray-900 tracking-tight">
+                Subject :  {{ selectedEmail()?.subject || '(no subject)' }}
+                </h2>
+                <span class="text-[11px] font-semibold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-md border border-gray-200">
+                  Inbox
+                </span>
+                <span 
+                  [class.bg-emerald-50]="selectedEmail()?.status === 'delivered'"
+                  [class.text-emerald-700]="selectedEmail()?.status === 'delivered'"
+                  [class.border-emerald-200]="selectedEmail()?.status === 'delivered'"
+                  [class.bg-blue-50]="selectedEmail()?.status === 'sent'"
+                  [class.text-blue-700]="selectedEmail()?.status === 'sent'"
+                  [class.border-blue-200]="selectedEmail()?.status === 'sent'"
+                  class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md border">
+                  {{ selectedEmail()?.status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Sender & Recipient Card -->
+            <div class="flex items-start justify-between gap-4 pt-2">
+              <div class="flex items-start gap-3.5">
+                <!-- Initials Avatar -->
+                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-teal-500 text-white font-bold text-sm flex items-center justify-center shrink-0 select-none shadow-xs">
+                  {{ getSenderInitials(selectedEmail()?.senderName || selectedEmail()?.from) }}
+                </div>
+
+                <div class="flex flex-col">
+                  <div class="flex items-baseline gap-2 flex-wrap">
+                    <span class="text-sm font-bold text-gray-900">
+                      {{ selectedEmail()?.senderName || selectedEmail()?.from }}
+                    </span>
+                    <span class="text-xs text-gray-500">
+                      &lt;{{ selectedEmail()?.from }}&gt;
+                    </span>
+                  </div>
+
+                  <div class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                    <span>to {{ selectedEmail()?.recipientName ? selectedEmail()?.recipientName + ' (' + selectedEmail()?.to + ')' : selectedEmail()?.to }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Timestamp -->
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs text-gray-500 font-medium">
+                  {{ (selectedEmail()?.dateCreated || selectedEmail()?.createdAt) | date:'MMM d, y, h:mm a' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Email Body Content -->
+            <div class="pl-14 text-sm text-gray-800 leading-relaxed whitespace-pre-wrap font-normal select-text min-h-[120px]">
+              {{ selectedEmail()?.message }}
+            </div>
+
+          </div>
+
+        </article>
+
+       <!-- gmail list -->
+        <section *ngIf="!selectedEmail()" class="flex-1 flex flex-col h-full overflow-hidden">
+          
+          <!-- Action Toolbar -->
+          <div class="h-12 px-4 border-b border-gray-200/80 flex items-center justify-between gap-4 shrink-0 bg-white select-none">
+            
+            <div class="flex items-center gap-1.5">
+              
+              <!-- Select All Checkbox -->
+              <div class="flex items-center pl-1 pr-1 py-1 hover:bg-gray-100 rounded-md cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  [checked]="isAllSelected()" 
+                  (change)="toggleSelectAll()"
+                  class="w-4 h-4 rounded text-[#0b57d0] focus:ring-[#0b57d0] border-gray-400 cursor-pointer accent-[#0b57d0]"
+                />
+              </div>
+
+              <!-- Refresh Button -->
+              <button 
+                (click)="loadEmails()" 
+                title="Refresh"
+                class="p-2 text-gray-600 hover:bg-gray-100 rounded-full transition-all cursor-pointer">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" [class.animate-spin]="isLoading()">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+              </button>
+
+              <!-- Bulk Action Bar -->
+              <div *ngIf="selectedEmailIds().size > 0" class="flex items-center gap-1 ml-2 animate-fade-in">
+                <div class="h-4 w-px bg-gray-200 mx-1"></div>
+
+                <span class="text-xs font-semibold text-gray-600 mr-2">
+                  {{ selectedEmailIds().size }} selected
+                </span>
+
+                <!-- Delete Selected -->
+                <button 
+                  (click)="confirmBulkDelete()"
+                  title="Delete Selected"
+                  class="p-2 text-gray-600 hover:text-rose-600 hover:bg-rose-50 rounded-full transition-all cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+
+                <!-- Clear Selection -->
+                <button 
+                  (click)="clearSelection()"
+                  title="Deselect All"
+                  class="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all cursor-pointer">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Email Rows List (Infinite Scroll on scroll) -->
+          <div 
+            (scroll)="onTableScroll($event)"
+            class="flex-1 overflow-y-auto divide-y divide-gray-100">
+            
+            <!-- Loading Initial State -->
+            <div *ngIf="isLoading()" class="flex flex-col items-center justify-center h-64 gap-3">
+              <div class="w-8 h-8 border-3 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs font-semibold text-gray-500">Loading messages...</p>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="!isLoading() && filteredEmails().length === 0" class="flex flex-col items-center justify-center h-80 text-center p-8">
+              <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3 text-gray-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+              </div>
+              <h3 class="text-sm font-bold text-gray-800 capitalize">No {{ activeFolder() }} messages</h3>
+              <p class="text-xs text-gray-500 mt-1 max-w-sm">
+                {{ searchQuery() ? 'No messages matched your search criteria.' : 'Messages in ' + activeFolder() + ' will appear here.' }}
+              </p>
+            </div>
+
+            <!-- Row Item (Iterating through displayedEmails) -->
+            <div 
+              *ngFor="let email of displayedEmails()" 
+              (click)="openEmailDetail(email)"
+              [class.bg-[#f2f6fc]]="isEmailSelected(email)"
+              [class.bg-white]="!isEmailSelected(email)"
+              class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#f2f6fc] border-y border-transparent transition-colors duration-150 cursor-pointer group relative">
+              
+              <!-- Checkbox -->
+              <div class="flex items-center shrink-0" (click)="$event.stopPropagation()">
+                <input 
+                  type="checkbox" 
+                  [checked]="isEmailSelected(email)"
+                  (change)="toggleSelectEmail(email, $event)"
+                  class="w-4 h-4 rounded text-[#0b57d0] focus:ring-[#0b57d0] border-gray-400 cursor-pointer accent-[#0b57d0]"
+                />
+              </div>
+
+              <!-- Sender / Recipient -->
+              <div class="w-48 shrink-0 truncate">
+                <span class="text-xs truncate font-medium text-gray-800">
+                  {{ email.recipientName ? email.recipientName : (email.to || email.senderName || 'Me') }}
+                </span>
+              </div>
+
+              <!-- Subject & Snippet -->
+              <div class="flex-1 min-w-0 flex items-baseline gap-1.5 truncate">
+                <span class="text-xs truncate shrink-0 font-medium text-gray-900">
+                  {{ email.subject || '(no subject)' }}
+                </span>
+                <span class="text-xs text-gray-400 select-none">-</span>
+                <span class="text-xs text-gray-500 font-normal truncate">
+                  {{ email.message }}
+                </span>
+              </div>
+
+              <!-- Right: Status Badge & Date -->
+              <div class="flex items-center gap-3 shrink-0">
+                <span 
+                  [class.bg-emerald-50]="email.status === 'delivered'"
+                  [class.text-emerald-700]="email.status === 'delivered'"
+                  [class.bg-blue-50]="email.status === 'sent'"
+                  [class.text-blue-700]="email.status === 'sent'"
+                  [class.bg-rose-50]="email.status === 'failed'"
+                  [class.text-rose-700]="email.status === 'failed'"
+                  class="text-[10px] font-semibold px-2 py-0.2 rounded capitalize">
+                  {{ email.status }}
+                </span>
+
+                <span class="text-xs text-gray-500 font-medium whitespace-nowrap w-16 text-right">
+                  {{ formatGmailDate(email.dateCreated || email.createdAt) }}
+                </span>
+              </div>
+
+            </div>
+
+            <!-- Bottom Loading / Infinite Scroll Indicator -->
+            <div *ngIf="isLoadingMore()" class="py-4 flex items-center justify-center gap-2 text-xs text-gray-500 bg-gray-50/50">
+              <div class="w-4 h-4 border-2 border-[#1a73e8] border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading more emails...</span>
+            </div>
+
+          </div>
+
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+ <!-- delete pop-up -->
+ 
+  <div *ngIf="emailToDelete()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden animate-scale-up">
+      <div class="p-6 text-center">
+        <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </div>
+        <h3 class="text-base font-bold text-gray-900">Delete Conversation</h3>
+        <p class="text-xs text-gray-500 mt-2 leading-relaxed">
+          <span *ngIf="bulkDeleteMode()">Are you sure you want to delete all <strong>{{ selectedEmailIds().size }}</strong> selected messages?</span>
+          <span *ngIf="!bulkDeleteMode()">Are you sure you want to delete <strong class="text-gray-700">"{{ emailToDelete()?.subject || 'this email' }}"</strong>?</span>
+          This action cannot be undone.
+        </p>
+      </div>
+      <footer class="px-6 py-4 bg-gray-50/70 border-t border-gray-100 flex items-center justify-end gap-3">
+        <button 
+          (click)="cancelDeleteEmail()" 
+          [disabled]="isDeleting()"
+          class="px-4 py-2 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-100 transition-all cursor-pointer text-xs disabled:opacity-50">
+          Cancel
+        </button>
+        <button 
+          (click)="executeDeleteEmail()" 
+          [disabled]="isDeleting()"
+          class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl shadow-xs transition-all cursor-pointer text-xs flex items-center gap-1.5 disabled:opacity-50">
+          <svg *ngIf="isDeleting()" class="w-3.5 h-3.5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>{{ isDeleting() ? 'Deleting...' : 'Yes, Delete' }}</span>
+        </button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- GMAIL SNACKBAR TOAST NOTIFICATION -->
+  <div *ngIf="toastMessage()" class="fixed bottom-6 left-24 z-50 bg-[#202124] text-white text-xs font-medium px-4 py-3 rounded-lg shadow-xl flex items-center justify-between gap-6 animate-slide-in min-w-[240px]">
+    <span>{{ toastMessage() }}</span>
+    <button (click)="toastMessage.set(null)" class="text-[#8ab4f8] hover:underline font-semibold cursor-pointer text-xs">
+      Dismiss
+    </button>
+  </div>
+
+</div>

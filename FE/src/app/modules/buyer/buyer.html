@@ -1,0 +1,427 @@
+<div class="flex h-screen w-screen overflow-hidden bg-[#f8fafd] text-[#1f1f1f] font-sans antialiased select-none">
+
+  <!-- APP SIDEBAR -->
+  <app-sidebar></app-sidebar>
+
+  <!-- MAIN WRAPPER -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+    <!-- HEADER BAR -->
+    <header
+      class="h-16 bg-white border-b border-gray-200/80 px-6 flex items-center justify-between gap-4 shrink-0 z-20">
+      <!-- LEFT TITLE -->
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-teal-600/10 text-teal-700 flex items-center justify-center font-bold">
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-bold text-gray-900 leading-tight">Buyers Directory</h1>
+            <p class="text-[11px] text-gray-500 font-medium hidden sm:block">Manage buyer profiles and inquiries</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER SEARCH BAR -->
+      <div class="flex-1 max-w-md mx-2 sm:mx-6">
+        <div class="relative w-full">
+          <input type="text" [ngModel]="searchQuery()" (ngModelChange)="onSearchChange($event)"
+            placeholder="Search by name or address..."
+            class="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-gray-50 border border-gray-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition shadow-xs" />
+          <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- HEADER ACTIONS -->
+      <div class="flex items-center gap-2.5 shrink-0">
+        <button (click)="exportToExcel()" [disabled]="isExporting()" title="Export to Excel"
+          class="hidden md:flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition shadow-xs disabled:opacity-50 cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>{{ isExporting() ? 'Exporting...' : 'Export to Excel' }}</span>
+        </button>
+
+        <button (click)="openAddModal()"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition shadow-xs hover:shadow-md hover:shadow-teal-600/20 active:scale-95">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Add Buyer
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENT SCROLL AREA -->
+    <main class="flex-1 overflow-y-auto px-6 py-5 space-y-5 bg-[#f8fafd]">
+
+      <!-- MAIN DATA CONTAINER -->
+      <!-- LOADING SKELETON -->
+      <div *ngIf="isLoading()" class="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-xs">
+        <div class="w-10 h-10 border-3 border-teal-600/30 border-t-teal-600 rounded-full animate-spin mx-auto mb-3">
+        </div>
+        <p class="text-xs font-semibold text-gray-500">Loading buyers directory...</p>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div *ngIf="!isLoading() && displayedBuyers().length === 0" class="bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center shadow-xs">
+        <div class="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        </div>
+        <h3 class="text-sm font-bold text-gray-800">No buyers found</h3>
+        <p class="text-xs text-gray-500 mt-1 max-w-sm mx-auto">No buyer records match your current search and filter
+          criteria.</p>
+        <button (click)="openAddModal()"
+          class="mt-4 px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition shadow-xs">
+          Add New Buyer
+        </button>
+      </div>
+
+      <!-- TABLE VIEW -->
+      <div *ngIf="!isLoading() && displayedBuyers().length > 0" class="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead
+              class="bg-gray-50/90 border-b border-gray-200 text-gray-500 font-semibold text-[11px] uppercase tracking-wider">
+              <tr>
+                <th class="py-3 px-4">Buyer</th>
+                <th class="py-3 px-4">Contact</th>
+                <th class="py-3 px-4">Property of Interest</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-center">Linked Leads</th>
+                <th class="py-3 px-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr *ngFor="let buyer of displayedBuyers()" class="hover:bg-teal-50/30 transition-colors cursor-pointer group" (click)="openProfile(buyer)">
+                <!-- BUYER NAME + AVATAR -->
+                <td class="py-3.5 px-4">
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 text-white font-bold text-xs flex items-center justify-center shadow-xs shrink-0">
+                      {{ getInitials(buyer.name) }}
+                    </div>
+                    <div>
+                      <p class="font-bold text-gray-900 group-hover:text-teal-700 transition-colors">{{ buyer.name }}
+                      </p>
+                      <p class="text-[11px] text-gray-400 mt-0.5">{{ buyer.createdAt ? (buyer.createdAt |
+                        date:'mediumDate') : '' }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- CONTACT -->
+                <td class="py-3.5 px-4">
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-gray-700">
+                      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span class="font-medium">{{ buyer.mobilenumber || 'No phone' }}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 text-gray-500">
+                      <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      <span>{{ buyer.email || 'No email' }}</span>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- PROPERTY -->
+                <td class="py-3.5 px-4 max-w-xs">
+                  <div class="flex items-start gap-1.5 text-gray-700">
+                    <svg class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="truncate">{{ buyer.propertyAddress || 'No property specified' }}</span>
+                  </div>
+                </td>
+
+                <!-- STATUS SELECTOR -->
+                <td class="py-3.5 px-4" (click)="$event.stopPropagation()">
+                  <div class="relative inline-flex items-center">
+                    <select #statusSelect [value]="buyer.status || 'active'"
+                      (change)="updateBuyerStatus(buyer, statusSelect.value, $event)"
+                      class="appearance-none pl-3 pr-7 py-1 text-[11px] font-bold rounded-full border cursor-pointer outline-none transition-all duration-200 tracking-wide uppercase shadow-2xs"
+                      [ngClass]="getStatusClass(buyer.status)"
+                      title="Click to change buyer status">
+                      <option *ngFor="let s of statusOptions" [value]="s" [selected]="s === buyer.status" class="bg-white text-gray-800 font-medium py-1 capitalize">
+                        {{ s }}
+                      </option>
+                    </select>
+                    <!-- Custom chevron arrow -->
+                    <div class="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <svg class="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- LINKED LEADS COUNT -->
+                <td class="py-3.5 px-4 text-center">
+                  <span class="inline-flex items-center justify-center font-bold px-2.5 py-0.5 rounded-full text-xs shadow-2xs"
+                    [ngClass]="buyer.lead_ids && buyer.lead_ids.length > 0 
+                      ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' 
+                      : 'bg-gray-100 text-gray-500 border border-gray-200'">
+                    {{ buyer.lead_ids?.length || 0 }}
+                  </span>
+                </td>
+
+                <!-- ACTIONS -->
+                <td class="py-3.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-1" (click)="$event.stopPropagation()">
+                    <!-- EDIT BUTTON -->
+                    <button (click)="openEditModal(buyer, $event)" title="Edit Buyer"
+                      class="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+
+                    <!-- DELETE BUTTON -->
+                    <button (click)="promptDeleteBuyer(buyer, $event)" title="Delete Buyer"
+                      class="p-1.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="border-t border-gray-100 bg-white">
+          <mat-paginator
+            [length]="totalItems()"
+            [pageIndex]="pageIndex()"
+            [pageSize]="pageSize()"
+            [pageSizeOptions]="[5, 10, 20]"
+            [showFirstLastButtons]="true"
+            (page)="handlePageEvent($event)">
+          </mat-paginator>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ADD BUYER MODAL -->
+  <div *ngIf="showAddModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center font-bold">
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-gray-900">Add New Buyer</h3>
+        </div>
+        <button (click)="closeAddModal()"
+          class="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Buyer Name <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="addForm.name" placeholder="e.g. John Doe"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">Phone Number</label>
+            <input type="text" [(ngModel)]="addForm.mobilenumber" placeholder="e.g. 555-0199"
+              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">Email Address</label>
+            <input type="email" [(ngModel)]="addForm.email" placeholder="e.g. buyer@example.com"
+              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+          </div>
+        </div>
+
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Property Address</label>
+          <input type="text" [(ngModel)]="addForm.propertyAddress" placeholder="e.g. 742 Evergreen Terrace"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Status</label>
+          <select [(ngModel)]="addForm.status"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="hold">Hold</option>
+            <option value="assign">Assign</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+        <button (click)="closeAddModal()"
+          class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+          Cancel
+        </button>
+        <button (click)="submitAddBuyer()" [disabled]="isSubmitting()"
+          class="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition shadow-xs flex items-center gap-1.5 disabled:opacity-50">
+          <span *ngIf="isSubmitting()" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+          Create Buyer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT BUYER MODAL -->
+  <div *ngIf="showEditModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-gray-900">Edit Buyer Profile</h3>
+        </div>
+        <button (click)="closeEditModal()"
+          class="p-1.5 text-gray-400 hover:text-gray-700 rounded-lg hover:bg-gray-100 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Buyer Name <span class="text-rose-500">*</span></label>
+          <input type="text" [(ngModel)]="editForm.name"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">Phone Number</label>
+            <input type="text" [(ngModel)]="editForm.mobilenumber"
+              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+          </div>
+          <div>
+            <label class="block font-bold text-gray-700 mb-1">Email Address</label>
+            <input type="email" [(ngModel)]="editForm.email"
+              class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Link to Lead</label>
+          <select [(ngModel)]="editForm.lead_id" (ngModelChange)="onEditLeadSelect($event)"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white">
+            <option value="">-- No Lead Link --</option>
+            <option *ngFor="let lead of availableLeads()" [value]="lead._id || lead.id">
+              {{ lead.name || lead.ownername || 'Lead' }} - {{ lead.propertyAddress || 'No Address' }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Property Address</label>
+          <input type="text" [(ngModel)]="editForm.propertyAddress"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" />
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">Status</label>
+          <select [(ngModel)]="editForm.status"
+            class="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 bg-white">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+            <option value="hold">Hold</option>
+            <option value="assign">Assign</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
+        <button (click)="closeEditModal()"
+          class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+          Cancel
+        </button>
+        <button (click)="submitEditBuyer()" [disabled]="isSubmitting()"
+          class="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-xl transition shadow-xs flex items-center gap-1.5 disabled:opacity-50">
+          <span *ngIf="isSubmitting()" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div *ngIf="showDeleteConfirmModal()" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-100 text-center space-y-4">
+      <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-gray-900">Delete Buyer Record</h3>
+        <p class="text-xs text-gray-500 mt-1">Are you sure you want to remove buyer <strong class="text-gray-800">{{
+            buyerToDelete()?.name }}</strong>? This action cannot be undone.</p>
+      </div>
+      <div class="pt-2 flex items-center justify-center gap-2">
+        <button (click)="closeDeleteModal()"
+          class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">
+          Cancel
+        </button>
+        <button (click)="executeDeleteBuyer()" [disabled]="isSubmitting()"
+          class="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition shadow-xs flex items-center gap-1.5 disabled:opacity-50">
+          <span *ngIf="isSubmitting()" class="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
+          Confirm Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div *ngIf="toastMessage()"
+    class="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-semibold animate-slide-up"
+    [ngClass]="toastType() === 'success' ? 'bg-emerald-900 text-white border-emerald-700' : 'bg-rose-900 text-white border-rose-700'">
+    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path *ngIf="toastType() === 'success'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      <path *ngIf="toastType() !== 'success'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+    <span>{{ toastMessage() }}</span>
+  </div>
+
+</div>
