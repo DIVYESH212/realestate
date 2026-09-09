@@ -17,14 +17,11 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   cors({
-    origin: "http://localhost:4200",
+    origin: "http://localhost:4200/",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: false,
   }),
 );
-
-
-
 
 // Mount versioned API routes
 app.use("/api/v1", webRoutes);
