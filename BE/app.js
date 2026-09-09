@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:4200",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: false,
   }),
