@@ -18,10 +18,13 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(
   cors({
     origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE","PATCH"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: false,
   }),
 );
+
+
+
 
 // Mount versioned API routes
 app.use("/api/v1", webRoutes);
@@ -29,3 +32,5 @@ app.use("/api/v1", webRoutes);
 app.use("/web-api-docs", swaggerUi.serve, swaggerUi.setup(swaggerJsDocsWeb));
 
 export default app;
+
+
