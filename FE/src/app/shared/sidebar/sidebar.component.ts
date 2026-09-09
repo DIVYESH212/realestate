@@ -18,6 +18,7 @@ export class SidebarComponent {
   readonly drivepath = '/drive';
   readonly emailPath = '/email';
   readonly buyerspath = '/buyers';
+  readonly adminpanal= '/adminpanal'
 
   isActive(path: string): boolean {
     if (path === this.dashboardPath) {
