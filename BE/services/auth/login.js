@@ -1,7 +1,7 @@
 import dbService from "../../utilities/dbService";
-import { decryptPassword, generateJwtTokenFn, generateRefreshTokenFn } from "../../utilities/universal";
+import { decryptPassword, generateJwtTokenFn } from "../../utilities/universal";
 
-export const login = async ({ body, res }) => {
+export const login = async ({ body }) => {
   const { username, password } = body;
 
   if (!username || !password) {
@@ -21,20 +21,9 @@ export const login = async ({ body, res }) => {
     throw new Error("Invalid username or password");
   }
 
-  const payload = { id: user._id, userId: user._id, username: user.username, email: user.email };
-  const token = await generateJwtTokenFn(payload, "1h");
-  const refreshToken = await generateRefreshTokenFn(payload, "7d");
+  const token = await generateJwtTokenFn({ id: user._id, userId: user._id, username: user.username, email: user.email });
 
-  await dbService.updateOneRecord("userModel", { _id: user._id }, { token, refreshToken });
+  await dbService.updateOneRecord("userModel", { _id: user._id }, { token });
 
-  if (res && typeof res.cookie === "function") {
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-  }
-
-  return { message: "Login successful", token, refreshToken };
+  return { message: "Login successful", token };
 };

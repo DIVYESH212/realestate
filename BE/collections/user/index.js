@@ -21,10 +21,6 @@ const registerSchema = new mongoose.Schema({
       type: String,
       default: undefined,
     },
-    refreshToken: {
-      type: String,
-      default: undefined,
-    },
     resetPasswordToken: {
       type: String,
       default: undefined,
