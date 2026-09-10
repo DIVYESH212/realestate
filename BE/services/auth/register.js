@@ -1,5 +1,5 @@
 import dbService from "../../utilities/dbService";
-import { encryptpassword, generateJwtTokenFn } from "../../utilities/universal";
+import { encryptpassword, generateJwtTokenFn, generateRefreshTokenFn } from "../../utilities/universal";
 
 export const register = async ({ body }) => {
   const { username, password, email, mobilenumber } = body;
@@ -19,6 +19,7 @@ export const register = async ({ body }) => {
 
   const hashedPassword = await encryptpassword(password);
 
+  const payloadTemp = { username, email };
   const newUser = await dbService.createOneRecord("userModel", {
     username,
     password: hashedPassword,
@@ -26,7 +27,11 @@ export const register = async ({ body }) => {
     mobilenumber
   });
 
-  const token = await generateJwtTokenFn({ id: newUser._id, userId: newUser._id, username: newUser.username, email: newUser.email });
+  const payload = { id: newUser._id, userId: newUser._id, username: newUser.username, email: newUser.email };
+  const token = await generateJwtTokenFn(payload, "1h");
+  const refreshToken = await generateRefreshTokenFn(payload, "7d");
 
-  return { message: "User registered successfully", token };
+  await dbService.updateOneRecord("userModel", { _id: newUser._id }, { token, refreshToken });
+
+  return { message: "User registered successfully", token, refreshToken };
 };
