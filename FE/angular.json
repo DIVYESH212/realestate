@@ -25,13 +25,8 @@
                 "input": "public"
               }
             ],
-            "styles": [
-              "src/styles.css"
-            ],
-            "allowedCommonJsDependencies": [
-              "exceljs",
-              "file-saver"
-            ]
+            "styles": ["src/styles.css"],
+            "allowedCommonJsDependencies": ["exceljs", "file-saver"]
           },
           "configurations": {
             "production": {
@@ -71,6 +66,9 @@
         },
         "test": {
           "builder": "@angular/build:unit-test"
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy"
         }
       }
     }
