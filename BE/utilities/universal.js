@@ -47,12 +47,12 @@ export const generateRandom = (length = 32, alphanumeric = true) => {
   };
 
 /*********** WEB Generate JWT token *************/
-export const generateJwtTokenFn = async (userIdObj) => {
+export const generateJwtTokenFn = async (userIdObj, expiresIn = "1h") => {
     return new Promise((resolve, reject) => {
       jwt.sign(
         userIdObj,
         getJwtKey(),
-        { algorithm: getJwtAlgo(), expiresIn: "24h" },
+        { algorithm: getJwtAlgo(), expiresIn },
         function (err, encode) {
           if (err) {
             reject(err);
@@ -63,6 +63,53 @@ export const generateJwtTokenFn = async (userIdObj) => {
       );
     });
   };
+
+/*********** Generate Refresh Token *************/
+export const generateRefreshTokenFn = async (userIdObj, expiresIn = "7d") => {
+  return new Promise((resolve, reject) => {
+    jwt.sign(
+      userIdObj,
+      getJwtKey(),
+      { algorithm: getJwtAlgo(), expiresIn },
+      function (err, encode) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(encode);
+        }
+      }
+    );
+  });
+};
+
+/*********** Verify Refresh Token *************/
+export const verifyRefreshTokenFn = (token) => {
+  return new Promise((resolve, reject) => {
+    jwt.verify(token, getJwtKey(), function (err, decoded) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(decoded);
+      }
+    });
+  });
+};
+
+/*********** Parse Cookies Helper *************/
+export const parseCookies = (req) => {
+  const list = {};
+  const cookieHeader = req?.headers?.cookie;
+  if (!cookieHeader) return list;
+  cookieHeader.split(";").forEach((cookie) => {
+    const parts = cookie.split("=");
+    const name = parts[0]?.trim();
+    if (!name) return;
+    const value = parts.slice(1).join("=").trim();
+    list[name] = decodeURIComponent(value);
+  });
+  return list;
+};
+
   /*********** Test Decode JWT token *************/
   export const decodeJwtTokenFn = (req, res, next) => {
     let Authorization =

@@ -13,22 +13,30 @@ export class AuthService {
   private apiUrl = 'http://localhost:5000/api/v1/auth';
 
   login(credentials: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/login`, credentials).pipe(
+    return this.http.post<any>(`${this.apiUrl}/login`, credentials, { withCredentials: true }).pipe(
       tap(response => {
         const token = response?.data?.token || (typeof response?.data === 'string' ? response.data : null) || response?.token;
+        const refreshToken = response?.data?.refreshToken || response?.refreshToken;
         if (token) {
           localStorage.setItem('token', token);
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
         }
       })
     );
   }
 
   register(userData: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/signup`, userData).pipe(
+    return this.http.post<any>(`${this.apiUrl}/signup`, userData, { withCredentials: true }).pipe(
       tap(response => {
         const token = response?.data?.token || (typeof response?.data === 'string' ? response.data : null) || response?.token;
+        const refreshToken = response?.data?.refreshToken || response?.refreshToken;
         if (token) {
           localStorage.setItem('token', token);
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
         }
       })
     );
@@ -105,7 +113,32 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     this.router.navigate(['/login']);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  refreshToken(): Observable<any> {
+    const refreshToken = this.getRefreshToken();
+    return this.http.post<any>(
+      `${this.apiUrl}/refresh-token`,
+      { refreshToken },
+      { withCredentials: true }
+    ).pipe(
+      tap(response => {
+        const token = response?.data?.token || response?.token;
+        const newRefreshToken = response?.data?.refreshToken || response?.refreshToken;
+        if (token) {
+          localStorage.setItem('token', token);
+        }
+        if (newRefreshToken) {
+          localStorage.setItem('refreshToken', newRefreshToken);
+        }
+      })
+    );
   }
 
   getUserProfile(): Observable<any> {

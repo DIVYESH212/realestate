@@ -8,20 +8,22 @@ import swaggerJsDocsWeb from "./config/swagger/swagger-config-web";
 
 const app = express();
 
+app.use(
+  cors({
+    origin: [
+      "http://localhost:4200",
+    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    credentials: true,
+  }),
+);
+
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 // Serve static assets from public folder
 app.use("/public", express.static(path.join(__dirname, "public")));
 app.use(express.static(path.join(__dirname, "public")));
-
-app.use(
-  cors({
-    origin: "http://localhost:4200/",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: false,
-  }),
-);
 
 // Mount versioned API routes
 app.use("/api/v1", webRoutes);

@@ -9,7 +9,7 @@ export default async function (req, res, next) {
             const { error } = schemaValidate.validate(body)
             if (error) return res.status(400).json(failAction(error.details[0].message.toString().replace(/[\""]+/g, "")))
         }
-        this['modelService']({ body, user, query, params }).then(
+        this['modelService']({ body, user, query, params, req, res }).then(
             success => res.status(200).json(successAction(success, Message.success)),
             error => {
                 console.error("than catch error=>", error)
