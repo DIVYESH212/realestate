@@ -239,6 +239,16 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                  <!-- Source Badge -->
+                  <span *ngIf="aiSource() === 'gemini' && !loadingAiSummary()"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    ✓ Gemini AI
+                  </span>
+                  <span *ngIf="aiSource() === 'fallback' && !loadingAiSummary()"
+                    class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    ⚡ Local Summary
+                  </span>
+
                   <span *ngIf="loadingAiSummary()" class="text-[11px] text-teal-300 font-medium flex items-center gap-1.5 animate-pulse">
                     <span class="w-2 h-2 rounded-full bg-teal-400"></span> Generating AI Insights...
                   </span>
@@ -249,6 +259,12 @@
                 </div>
               </div>
 
+              <!-- AI Error Warning Banner -->
+              <div *ngIf="aiErrorMessage() && !loadingAiSummary()" class="mt-3 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center gap-2 text-[11px] text-amber-300">
+                <span>⚠️</span>
+                <span>AI unavailable: {{ aiErrorMessage() }} — showing local summary instead.</span>
+              </div>
+
               <!-- Summary Content -->
               <div class="mt-4 text-xs leading-relaxed text-gray-200">
                 <div *ngIf="loadingAiSummary() && !aiSummary()" class="py-4 flex items-center gap-3 text-teal-200/80">
@@ -256,7 +272,12 @@
                   <span>Analyzing property deal, assigned buyer profile, and portfolio capacity...</span>
                 </div>
 
-                <div *ngIf="aiSummary()" [innerHTML]="formatAiSummary(aiSummary())" class="whitespace-pre-line text-[13px] font-normal leading-relaxed text-slate-100">
+                <div *ngIf="aiSummary()" [innerHTML]="formatAiSummary(aiSummary())" class="text-[13px] font-normal leading-relaxed text-slate-100">
+                </div>
+
+                <!-- Total failure state (no summary at all) -->
+                <div *ngIf="!aiSummary() && !loadingAiSummary() && aiErrorMessage()" class="py-4 text-center text-amber-300/70 text-[12px]">
+                  <p>Unable to generate summary. Click <strong class="text-teal-300">↻ Refresh AI</strong> to retry.</p>
                 </div>
               </div>
 

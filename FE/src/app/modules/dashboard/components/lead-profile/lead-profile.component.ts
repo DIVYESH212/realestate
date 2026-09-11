@@ -63,6 +63,8 @@ export class LeadProfileComponent implements OnInit {
   loadingAiSummary = signal<boolean>(false);
   aiOtherLeadsCount = signal<number>(0);
   aiAssignedBuyer = signal<any | null>(null);
+  aiSource = signal<'gemini' | 'fallback' | null>(null);
+  aiErrorMessage = signal<string | null>(null);
 
   // UI & Modals State
   activeTab = signal<'overview' | 'contacts' | 'property' | 'financial' | 'cashbuyer' | 'emails'>('overview');
@@ -192,15 +194,19 @@ export class LeadProfileComponent implements OnInit {
     if (!id) return;
 
     this.loadingAiSummary.set(true);
+    this.aiErrorMessage.set(null);
     this.leadService.getLeadAiSummary(id).subscribe({
       next: (res) => {
         this.aiSummary.set(res?.summary || null);
         this.aiOtherLeadsCount.set(res?.otherLeadsCount ?? 0);
         this.aiAssignedBuyer.set(res?.buyer || null);
+        this.aiSource.set(res?.source || 'fallback');
+        this.aiErrorMessage.set(res?.aiError || null);
         this.loadingAiSummary.set(false);
       },
       error: (err) => {
         console.error('Failed to fetch AI summary:', err);
+        this.aiErrorMessage.set(err?.error?.message || 'Failed to fetch AI summary');
         this.loadingAiSummary.set(false);
       }
     });
@@ -209,9 +215,18 @@ export class LeadProfileComponent implements OnInit {
   formatAiSummary(text: string | null): string {
     if (!text) return '';
     return text
+      // Convert **bold** to styled <strong>
       .replace(/\*\*(.*?)\*\*/g, '<strong class="text-teal-300 font-bold">$1</strong>')
-      .replace(/^\s*\*\s*/gm, '• ');
+      // Convert *italic* to <em> (but not inside **)
+      .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+      // Convert markdown bullet points (- or *) to styled bullets
+      .replace(/^[\s]*[-*]\s+/gm, '• ')
+      // Convert numbered lists (1. 2. 3.) to styled numbers
+      .replace(/^(\d+)\.\s+/gm, '<strong class="text-teal-400">$1.</strong> ')
+      // Convert newlines to <br> for proper rendering
+      .replace(/\n/g, '<br>');
   }
+
 
   private populateForm(lead: any): void {
     const val: any = {};
@@ -230,34 +245,62 @@ export class LeadProfileComponent implements OnInit {
 
   // --- Navigation Helpers ---
 
-  private updateNavigation(currentId: string): void {
-    const list = this.leadService.navigationLeads().length
-      ? this.leadService.navigationLeads()
-      : this.leadService.allLeads();
-    if (list.length) {
-      this.calculateAdjacentLeads(currentId, list);
-    } else {
-      this.leadService.getLeads(1, 500).subscribe({
-        next: (res) => {
-          const leads = res?.leads || [];
-          this.leadService.setNavigationLeads(leads, 'All Leads', leads);
-          this.calculateAdjacentLeads(currentId, leads);
-        },
-      });
-    }
+  private getLeadId(l: any): string {
+    if (!l) return '';
+    const val = l.id || l._id || '';
+    return String(val).trim();
   }
 
-  private calculateAdjacentLeads(currentId: string, leads: any[]): void {
-    if (!leads?.length) {
-      this.prevLeadId.set(null);
-      this.nextLeadId.set(null);
-      this.navIndex.set(0);
-      this.navTotal.set(0);
+  private updateNavigation(currentId: string): void {
+    if (!currentId) return;
+
+    const navList = this.leadService.navigationLeads();
+    const allList = this.leadService.allLeads();
+
+    // 1. Try finding in navigationLeads()
+    if (navList?.length && this.calculateAdjacentLeads(currentId, navList)) {
       return;
     }
 
+    // 2. If not found in navigationLeads(), try allLeads()
+    if (allList?.length && this.calculateAdjacentLeads(currentId, allList)) {
+      this.leadService.setNavigationLeads(allList, 'All Leads', allList);
+      return;
+    }
+
+    // 3. If still not found or lists are empty (e.g. direct URL / refresh), fetch from backend
+    this.leadService.getLeads(1, 500).subscribe({
+      next: (res) => {
+        const leads = res?.leads || [];
+        if (leads.length) {
+          this.leadService.setNavigationLeads(leads, 'All Leads', leads);
+          this.calculateAdjacentLeads(currentId, leads);
+        } else {
+          this.resetNavigation();
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch leads for navigation:', err);
+        this.resetNavigation();
+      },
+    });
+  }
+
+  private resetNavigation(): void {
+    this.prevLeadId.set(null);
+    this.nextLeadId.set(null);
+    this.navIndex.set(0);
+    this.navTotal.set(0);
+  }
+
+  private calculateAdjacentLeads(currentId: string, leads: any[]): boolean {
+    if (!leads?.length) {
+      this.resetNavigation();
+      return false;
+    }
+
     const curIdStr = String(currentId).trim();
-    const idx = leads.findIndex((l) => String(l.id ?? l._id ?? '').trim() === curIdStr);
+    const idx = leads.findIndex((l) => this.getLeadId(l) === curIdStr);
 
     if (idx !== -1) {
       const curLead = leads[idx];
@@ -269,15 +312,22 @@ export class LeadProfileComponent implements OnInit {
 
       const prev = idx > 0 ? leads[idx - 1] : null;
       const next = idx < leads.length - 1 ? leads[idx + 1] : null;
-      this.prevLeadId.set(prev ? String(prev.id ?? prev._id ?? '') : null);
-      this.nextLeadId.set(next ? String(next.id ?? next._id ?? '') : null);
+
+      const prevId = prev ? this.getLeadId(prev) : null;
+      const nextId = next ? this.getLeadId(next) : null;
+
+      this.prevLeadId.set(prevId || null);
+      this.nextLeadId.set(nextId || null);
+      return true;
     }
+
+    // Lead not found in this specific list
+    return false;
   }
 
   goToPrevLead(): void {
     const prev = this.prevLeadId();
     if (prev) {
-      this.activeTab.set('overview');
       this.router.navigate(['/lead-profile', prev]);
     }
   }
@@ -285,7 +335,6 @@ export class LeadProfileComponent implements OnInit {
   goToNextLead(): void {
     const next = this.nextLeadId();
     if (next) {
-      this.activeTab.set('overview');
       this.router.navigate(['/lead-profile', next]);
     }
   }
