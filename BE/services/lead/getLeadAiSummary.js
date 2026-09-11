@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { GoogleGenAI } from "@google/genai";
 import dbService from "../../utilities/dbService";
 import { getOwnerId } from "./utils";
 
@@ -71,6 +72,9 @@ export const getLeadAiSummary = async ({ user, params }) => {
 
   const leadContext = {
     property: lead.propertyAddress || lead.name || "Unspecified address",
+    city: lead.city || "",
+    state: lead.state || "",
+    zip: lead.zip || "",
     leadStatus: lead.leadstatus || lead.status || "Active",
     estimatedValue: lead.estimatedvalue ? `$${Number(lead.estimatedvalue).toLocaleString()}` : "N/A",
     owner: lead.ownername || "N/A",
@@ -84,52 +88,56 @@ export const getLeadAiSummary = async ({ user, params }) => {
       : null
   };
 
-  // 3. Call Free Google Gemini Flash API if key exists
+  // 3. Call Google Gemini API via official SDK
   const apiKey = process.env.GEMINI_API_KEY;
   let summary = "";
+  let aiError = null;
 
   if (apiKey) {
     try {
-      const prompt = `You are a real estate CRM intelligence assistant. Summarize this lead and its assigned buyer concisely in 3 short bullet points:
-1. Property & Deal: Address, status, estimated value.
-2. Assigned Buyer: Name, status, target area (or state 'No buyer assigned').
-3. Buyer Portfolio Context: State that this buyer currently holds ${otherLeadsCount} other lead(s) in their pipeline and whether they have capacity.
+      const ai = new GoogleGenAI({ apiKey });
+
+      const prompt = `Area Historical Insights: Using any available location info (property address, city, state, zip, or even the lead/owner name to infer a region), provide 1-2 sentences about the area's history — notable historical facts, neighborhood development trends, and how the local real estate market has evolved. Always attempt to provide this even with partial location data.
 
 Data:
 ${JSON.stringify(leadContext, null, 2)}`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              maxOutputTokens: 2048,
-              temperature: 0.3
-            }
-          })
-        }
-      );
+      const interaction = await ai.interactions.create({
+        model: "gemini-3.8-flash",
+        input: prompt,
+      });
 
-      const data = await response.json();
-      summary = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+      summary = interaction.output_text?.trim() || "";
+
+      if (!summary) {
+        aiError = "Gemini returned empty response";
+      }
     } catch (err) {
-      console.warn("Gemini API call failed, falling back to local summary:", err.message);
+      console.warn("Gemini SDK call failed, falling back to local summary:", err.message);
+      aiError = err.message || "AI request failed";
     }
+  } else {
+    aiError = "GEMINI_API_KEY not configured";
   }
 
   // 4. Fallback smart summary if API didn't return text
   if (!summary) {
-    summary = buyer
-      ? `• Property & Deal: ${leadContext.property} (${leadContext.leadStatus}, Valued at ${leadContext.estimatedValue}).\n• Assigned Buyer: ${buyer.name} (Status: ${buyer.status || "Active"}) targeting ${buyer.propertyAddress || "General market"}.\n• Buyer Portfolio: Holds ${otherLeadsCount} other active lead(s) in their deal pipeline.`
-      : `• Property & Deal: ${leadContext.property} (${leadContext.leadStatus}, Valued at ${leadContext.estimatedValue}).\n• Assigned Buyer: No buyer currently linked to this lead deal.`;
+    const bullet1 = `• **Property & Deal:** ${leadContext.property} (${leadContext.leadStatus}, Valued at ${leadContext.estimatedValue}).`;
+    const bullet2 = buyer
+      ? `• **Assigned Buyer:** ${buyer.name} (Status: ${buyer.status || "Active"}) targeting ${buyer.propertyAddress || "General market"}.`
+      : `• **Assigned Buyer:** No buyer currently linked to this lead deal.`;
+    const bullet3 = buyer
+      ? `• **Buyer Portfolio:** Holds ${otherLeadsCount} other active lead(s) in their deal pipeline.`
+      : "";
+
+    summary = [bullet1, bullet2, bullet3].filter(Boolean).join("\n");
   }
 
   return {
     leadId: lead._id,
     summary,
+    source: aiError ? "fallback" : "gemini",
+    aiError: aiError || null,
     lead: leadContext,
     buyer: buyer
       ? {

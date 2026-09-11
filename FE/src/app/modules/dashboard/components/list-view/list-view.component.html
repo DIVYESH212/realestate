@@ -21,7 +21,7 @@
               [class.pt-1.5]="!first"
             >
               <a
-                [routerLink]="['/lead-profile', lead.id]"
+                [routerLink]="['/lead-profile', lead.id || lead._id]"
                 [queryParams]="{ view: 'list' }"
                 class="text-[13px] font-extrabold text-gray-900 no-underline hover:text-teal-600 hover:underline hover:underline-offset-2 transition-colors duration-200 tracking-tight"
               >{{ c.name || 'Unnamed Contact' }}</a>
