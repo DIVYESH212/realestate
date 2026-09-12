@@ -1,4 +1,4 @@
-# 🏡 Resimpli — Real Estate CRM & AI-Powered Lead Management Platform
+
 
 [![Angular](https://img.shields.io/badge/Angular-21.2-dd0031?style=for-the-badge&logo=angular&logoColor=white)](https://angular.dev/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express_5-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
@@ -6,8 +6,6 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Google Gemini](https://img.shields.io/badge/Google_Gemini-Flash_AI-4285F4?style=for-the-badge&logo=google&logoColor=white)](https://ai.google.dev/)
 [![AWS S3](https://img.shields.io/badge/AWS-S3_Storage-FF9900?style=for-the-badge&logo=amazons3&logoColor=white)](https://aws.amazon.com/s3/)
-
-A modern, full-stack Real Estate Customer Relationship Management (CRM) and deal management ecosystem designed for real estate investors, brokers, and wholesalers. **Resimpli** streamlines the entire property lifecycle — from acquiring and analyzing leads to managing buyer lists, document drives, email campaigns, and pipeline progression — accelerated by **Google Gemini AI** for automatic historical area analysis and property insights.
 
 ---
 
